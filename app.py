@@ -36,6 +36,9 @@ if page == "Single Asset":
     st.subheader(f"Prix de {ticker}")
     st.line_chart(df["Close"])
     
+    st.subheader("RSI")
+    st.line_chart(df["RSI"])
+    
     # Bloc KPIs
     last_price = float(df["Close"].iloc[-1])
     daily_ret = float(df["return"].iloc[-1])
