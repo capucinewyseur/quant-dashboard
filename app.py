@@ -65,6 +65,7 @@ if page == "Single Asset":
         st.line_chart(strat_df["Position"])
     
     # Bloc KPIs
+    st.markdown("---")
     last_price = float(df["Close"].iloc[-1])
     daily_ret = float(df["return"].iloc[-1])
     vol_20d = float(df["return"].rolling(20).std().iloc[-1]) * np.sqrt(252)
