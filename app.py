@@ -27,17 +27,38 @@ page = st.sidebar.radio("Module", ["Single Asset", "Portfolio"])
 st.sidebar.markdown("---")
 
 # Sélection du ticker dans la sidebar
-ticker = st.sidebar.text_input("Ticker", "AAPL")
+st.sidebar.subheader("Asset Selection")
+ticker_options = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "JPM", "V", "JNJ"]
+ticker_selected = st.sidebar.selectbox("Select Ticker", ticker_options, index=0)
+ticker_custom = st.sidebar.text_input("Or enter custom ticker", "")
+ticker = ticker_custom if ticker_custom else ticker_selected
+
+# Sélection de la périodicité
+st.sidebar.markdown("---")
+periodicity = st.sidebar.selectbox(
+    "Periodicity",
+    ["Daily", "Weekly", "Monthly"],
+    index=0
+)
+
+# Mapping périodicité vers interval
+periodicity_map = {
+    "Daily": "1d",
+    "Weekly": "1wk",
+    "Monthly": "1mo"
+}
+interval = periodicity_map[periodicity]
 
 # Sélection de la stratégie dans la sidebar
+st.sidebar.markdown("---")
 strategy_name = st.sidebar.selectbox(
     "Strategy",
     ["Buy & Hold", "RSI strategy", "Momentum strategy"]
 )
 
 if page == "Single Asset":
-    # Chargement des données avec le ticker sélectionné
-    df = load_asset(ticker)
+    # Chargement des données avec le ticker et la périodicité sélectionnés
+    df = load_asset(ticker, interval=interval)
     
     # Ajout des indicateurs techniques
     rsi_window = st.sidebar.slider("RSI window", 5, 30, 14)
@@ -77,10 +98,18 @@ if page == "Single Asset":
                 equity_strat = strat_df["Equity_Strategy"].dropna()
                 
                 if len(strat_ret) > 0 and len(equity_strat) > 0:
-                    vol_annual = compute_volatility(strat_ret, periods_per_year=252)
-                    sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=252, risk_free_rate=0.0)
+                    # Déterminer periods_per_year selon la périodicité
+                    periods_map = {
+                        "Daily": 252,
+                        "Weekly": 52,
+                        "Monthly": 12
+                    }
+                    periods_per_year = periods_map.get(periodicity, 252)
+                    
+                    vol_annual = compute_volatility(strat_ret, periods_per_year=periods_per_year)
+                    sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=periods_per_year, risk_free_rate=0.0)
                     max_dd = compute_max_drawdown(equity_strat)
-                    cagr = compute_cagr(equity_strat, periods_per_year=252)
+                    cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
     
     # Graphique principal : Prix brut + Valeur cumulée de la stratégie
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
