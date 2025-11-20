@@ -285,6 +285,34 @@ def compute_cagr(equity_curve: pd.Series, periods_per_year: int = 252) -> float:
     cagr = (final_value / initial_value) ** (1 / n_years) - 1
     return float(cagr)
 
+def compute_total_return(equity_curve: pd.Series) -> float:
+    """
+    Compute total return from an equity curve.
+    
+    Total return = (Final Value / Initial Value) - 1
+    
+    Parameters
+    ----------
+    equity_curve : pd.Series
+        Series of cumulative values (equity curve)
+    
+    Returns
+    -------
+    float
+        Total return as a decimal (e.g., 0.25 for 25% return)
+    """
+    if equity_curve.empty:
+        return np.nan
+    
+    initial_value = equity_curve.iloc[0]
+    final_value = equity_curve.iloc[-1]
+    
+    if initial_value <= 0:
+        return np.nan
+    
+    total_return = (final_value / initial_value) - 1.0
+    return float(total_return)
+
 def backtest_complete(df, position_col="Position", price_col="Close", 
                      return_col="return", initial_capital=1.0):
     """

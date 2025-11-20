@@ -8,7 +8,7 @@ from modules.strategies import buy_and_hold, rsi_strategy, momentum_strategy
 from modules.backtesting import (apply_strategy_returns, build_equity_curves, 
                                  compute_returns, apply_strategy_position, compute_cumulative_returns,
                                  backtest_complete,
-                                 compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr)
+                                 compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr, compute_total_return)
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
@@ -107,6 +107,7 @@ if page == "Single Asset":
                 sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=periods_per_year, risk_free_rate=0.0)
                 max_dd = compute_max_drawdown(equity_strat)
                 cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
+                total_return = compute_total_return(equity_strat)
     
     # Graphique principal : Prix brut + Valeur cumulée de la stratégie (OBLIGATOIRE)
     # Ce graphique doit afficher 2 courbes :
@@ -180,24 +181,27 @@ if page == "Single Asset":
             st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
             
             # Affichage des métriques de performance
-            if 'vol_annual' in locals() and 'sharpe' in locals() and 'max_dd' in locals() and 'cagr' in locals():
+            if 'vol_annual' in locals() and 'sharpe' in locals() and 'max_dd' in locals() and 'cagr' in locals() and 'total_return' in locals():
                 st.subheader("Strategy Performance Metrics")
-                col1, col2, col3, col4 = st.columns(4)
+                col1, col2, col3, col4, col5 = st.columns(5)
                 
                 with col1:
-                    st.metric("Annualized Volatility", f"{vol_annual:.2%}")
+                    st.metric("Sharpe Ratio", f"{sharpe:.2f}" if not np.isnan(sharpe) else "N/A")
                 
                 with col2:
-                    sharpe_display = f"{sharpe:.2f}" if not np.isnan(sharpe) else "N/A"
-                    st.metric("Sharpe Ratio", sharpe_display)
-                
-                with col3:
                     max_dd_display = f"{max_dd:.2%}" if not np.isnan(max_dd) else "N/A"
                     st.metric("Max Drawdown", max_dd_display)
+                
+                with col3:
+                    st.metric("Annualized Volatility", f"{vol_annual:.2%}")
                 
                 with col4:
                     cagr_display = f"{cagr:.2%}" if not np.isnan(cagr) else "N/A"
                     st.metric("CAGR", cagr_display)
+                
+                with col5:
+                    total_return_display = f"{total_return:.2%}" if not np.isnan(total_return) else "N/A"
+                    st.metric("Total Return", total_return_display)
     
     # Bloc KPIs simples (prix actuel, rendement jour, vol 20j)
     st.markdown("---")
