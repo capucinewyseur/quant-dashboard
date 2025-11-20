@@ -93,7 +93,7 @@ if page == "Single Asset":
             x=df.index,
             y=df["Close"],
             mode='lines',
-            name=f'Prix {ticker}',
+            name=f'{ticker} Price',
             line=dict(color='#1f77b4', width=2),
             yaxis='y'
         ))
