@@ -117,7 +117,7 @@ if page == "Single Asset":
                 tickfont=dict(color='#1f77b4')
             ),
             yaxis2=dict(
-                title=dict(text="Valeur cumulée (Equity)", font=dict(color='#2ca02c')),
+                title=dict(text="Cumulative Value (Equity)", font=dict(color='#2ca02c')),
                 tickfont=dict(color='#2ca02c'),
                 anchor='x',
                 overlaying='y',
