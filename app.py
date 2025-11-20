@@ -264,20 +264,8 @@ if page == "Single Asset":
                 hovertemplate='<b>Confidence Interval</b><br>Date: %{x}<br>Lower: $%{y:.2f}<extra></extra>'
             ))
             
-            # Vertical line to separate historical from prediction
-            # Using add_shape instead of add_vline to avoid Timestamp issues
-            last_historical_date = recent_df.index[-1]
-            fig_pred.add_shape(
-                type="line",
-                x0=last_historical_date,
-                x1=last_historical_date,
-                y0=0,
-                y1=1,
-                yref="paper",
-                line=dict(color="gray", width=1, dash="dot"),
-                annotation_text="Today",
-                annotation_position="top"
-            )
+            # Note: Historical data ends at the last date, predictions start from the next day
+            # The separation is visually clear from the different line styles
             
             fig_pred.update_layout(
                 title=f"{ticker} Price Prediction - Linear Regression Model",
