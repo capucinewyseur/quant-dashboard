@@ -4,10 +4,12 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import time
+import numpy as np
+from modules.data import load_asset
 
 def get_apple_data(period="1d", interval="1m"):
     """
-    Récupère les données de l'action Apple depuis Yahoo Finance
+    Récupère les données de l'action Apple depuis Yahoo Finance (pour données récentes)
     
     Args:
         period: Période de données (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max)
@@ -54,11 +56,14 @@ def display_single_asset_module():
     with col2:
         st.metric("Prix actuel (USD)", f"${current_price:.2f}" if isinstance(current_price, (int, float)) else current_price)
     
-    # Récupération des données historiques
+    # Récupération des données historiques avec rendements
     with st.spinner("Récupération des données en cours..."):
-        data = get_apple_data(period="5d", interval="15m")
+        # Données récentes pour l'affichage en temps réel
+        data_recent = get_apple_data(period="5d", interval="15m")
+        # Données historiques avec rendements pour les KPIs
+        data = load_asset("AAPL", start="2018-01-01", interval="1d")
     
-    if not data.empty:
+    if not data.empty and not data_recent.empty:
         # Afficher les statistiques clés
         st.subheader("Statistiques clés")
         
@@ -74,20 +79,44 @@ def display_single_asset_module():
             st.metric("Variation journalière", f"${daily_change:.2f}", f"{daily_change_pct:.2f}%")
         
         with col3:
-            high_24h = data['High'].tail(96).max()  # Max sur 24h (96 * 15min)
-            st.metric("Max 24h", f"${high_24h:.2f}")
+            high_24h = data_recent['High'].max() if not data_recent.empty else data['High'].iloc[-1]
+            st.metric("Max récent", f"${high_24h:.2f}")
         
         with col4:
-            low_24h = data['Low'].tail(96).min()  # Min sur 24h
-            st.metric("Min 24h", f"${low_24h:.2f}")
+            low_24h = data_recent['Low'].min() if not data_recent.empty else data['Low'].iloc[-1]
+            st.metric("Min récent", f"${low_24h:.2f}")
         
-        # Graphique de série temporelle
-        st.subheader("Graphique de série temporelle")
+        # KPIs sur les rendements
+        st.subheader("KPIs sur les rendements")
         
-        fig = go.Figure()
+        # Calcul des KPIs
+        returns = data['return'].dropna()
+        mean_return = returns.mean() * 100  # En pourcentage
+        volatility = returns.std() * np.sqrt(252) * 100  # Volatilité annualisée
+        sharpe_ratio = (mean_return / 100 * 252) / (volatility / 100) if volatility > 0 else 0
+        max_drawdown = ((data['Close'] / data['Close'].cummax()) - 1).min() * 100
         
-        # Ligne de prix de clôture
-        fig.add_trace(go.Scatter(
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Rendement moyen annuel", f"{mean_return * 252:.2f}%")
+        
+        with col2:
+            st.metric("Volatilité annualisée", f"{volatility:.2f}%")
+        
+        with col3:
+            st.metric("Ratio de Sharpe", f"{sharpe_ratio:.2f}")
+        
+        with col4:
+            st.metric("Max Drawdown", f"{max_drawdown:.2f}%")
+        
+        # Graphique de série temporelle - Prix
+        st.subheader("Graphique de série temporelle - Prix")
+        
+        fig_price = go.Figure()
+        
+        # Ligne de prix de clôture (données historiques)
+        fig_price.add_trace(go.Scatter(
             x=data.index,
             y=data['Close'],
             mode='lines',
@@ -95,35 +124,59 @@ def display_single_asset_module():
             line=dict(color='#1f77b4', width=2)
         ))
         
-        # Ligne de prix d'ouverture
-        fig.add_trace(go.Scatter(
-            x=data.index,
-            y=data['Open'],
-            mode='lines',
-            name='Prix d\'ouverture',
-            line=dict(color='#ff7f0e', width=1, dash='dash')
-        ))
-        
-        fig.update_layout(
+        fig_price.update_layout(
             title="Évolution du prix de l'action Apple (AAPL)",
-            xaxis_title="Date/Heure",
+            xaxis_title="Date",
             yaxis_title="Prix (USD)",
             hovermode='x unified',
-            height=500,
+            height=400,
             showlegend=True
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig_price, use_container_width=True)
         
-        # Tableau des dernières données
+        # Graphique de série temporelle - Rendements
+        st.subheader("Graphique de série temporelle - Rendements")
+        
+        fig_returns = go.Figure()
+        
+        # Ligne des rendements
+        fig_returns.add_trace(go.Scatter(
+            x=data.index,
+            y=data['return'] * 100,
+            mode='lines',
+            name='Rendements journaliers',
+            line=dict(color='#2ca02c', width=1),
+            fill='tozeroy',
+            fillcolor='rgba(44, 160, 44, 0.1)'
+        ))
+        
+        # Ligne zéro
+        fig_returns.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
+        
+        fig_returns.update_layout(
+            title="Rendements journaliers de l'action Apple (AAPL)",
+            xaxis_title="Date",
+            yaxis_title="Rendement (%)",
+            hovermode='x unified',
+            height=400,
+            showlegend=True
+        )
+        
+        st.plotly_chart(fig_returns, use_container_width=True)
+        
+        # Tableau des dernières données avec rendements
         st.subheader("Dernières données")
+        display_data = data.tail(10)[['Open', 'High', 'Low', 'Close', 'Volume', 'return']].copy()
+        display_data['return'] = display_data['return'] * 100  # Convertir en pourcentage
         st.dataframe(
-            data.tail(10)[['Open', 'High', 'Low', 'Close', 'Volume']].style.format({
+            display_data.style.format({
                 'Open': '${:.2f}',
                 'High': '${:.2f}',
                 'Low': '${:.2f}',
                 'Close': '${:.2f}',
-                'Volume': '{:,.0f}'
+                'Volume': '{:,.0f}',
+                'return': '{:.2f}%'
             }),
             use_container_width=True
         )
