@@ -59,6 +59,11 @@ if page == "Single Asset":
     st.subheader("RSI")
     st.line_chart(df["RSI"])
     
+    # Affichage des positions de la stratégie
+    if 'strat_df' in locals():
+        st.subheader("Positions de la stratégie")
+        st.line_chart(strat_df["Position"])
+    
     # Bloc KPIs
     last_price = float(df["Close"].iloc[-1])
     daily_ret = float(df["return"].iloc[-1])
