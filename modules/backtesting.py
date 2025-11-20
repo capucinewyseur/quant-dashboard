@@ -166,3 +166,34 @@ def compute_max_drawdown(equity_curve: pd.Series) -> float:
     drawdown = compute_drawdown(equity_curve)
     return float(drawdown.min())
 
+def compute_cagr(equity_curve: pd.Series, periods_per_year: int = 252) -> float:
+    """
+    Calcule le CAGR (taux de croissance annuel composé) à partir d'une equity curve.
+
+    Parameters
+    ----------
+    equity_curve : pd.Series
+        Série de valeurs cumulées (equity curve).
+    periods_per_year : int
+        252 pour daily, 52 pour weekly, 12 pour monthly.
+
+    Returns
+    -------
+    float
+        CAGR annuel.
+    """
+    if equity_curve.empty:
+        return np.nan
+    
+    initial_value = equity_curve.iloc[0]
+    final_value = equity_curve.iloc[-1]
+    
+    n_periods = len(equity_curve)
+    n_years = n_periods / periods_per_year
+    
+    if n_years <= 0 or initial_value <= 0:
+        return np.nan
+    
+    cagr = (final_value / initial_value) ** (1 / n_years) - 1
+    return float(cagr)
+
