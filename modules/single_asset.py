@@ -132,7 +132,7 @@ def display_single_asset_module(ticker="AAPL"):
             st.metric("Max Drawdown", f"{max_drawdown:.2f}%")
         
         # Graphique de série temporelle - Prix
-        st.subheader("Graphique de série temporelle - Prix")
+        st.subheader("Time Series Chart - Price")
         
         fig_price = go.Figure()
         
