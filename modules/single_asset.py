@@ -41,7 +41,7 @@ def display_single_asset_module():
     """
     Affiche le module d'analyse d'un actif unique (Apple)
     """
-    st.header("🍎 Analyse de l'action Apple (AAPL)")
+    st.header("Analyse de l'action Apple (AAPL)")
     
     # Afficher le statut de mise à jour
     col1, col2, col3 = st.columns(3)
@@ -60,7 +60,7 @@ def display_single_asset_module():
     
     if not data.empty:
         # Afficher les statistiques clés
-        st.subheader("📊 Statistiques clés")
+        st.subheader("Statistiques clés")
         
         col1, col2, col3, col4 = st.columns(4)
         
@@ -82,7 +82,7 @@ def display_single_asset_module():
             st.metric("Min 24h", f"${low_24h:.2f}")
         
         # Graphique de série temporelle
-        st.subheader("📈 Graphique de série temporelle")
+        st.subheader("Graphique de série temporelle")
         
         fig = go.Figure()
         
@@ -116,7 +116,7 @@ def display_single_asset_module():
         st.plotly_chart(fig, use_container_width=True)
         
         # Tableau des dernières données
-        st.subheader("📋 Dernières données")
+        st.subheader("Dernières données")
         st.dataframe(
             data.tail(10)[['Open', 'High', 'Low', 'Close', 'Volume']].style.format({
                 'Open': '${:.2f}',
@@ -132,4 +132,4 @@ def display_single_asset_module():
         st.warning("Aucune donnée disponible pour le moment.")
     
     # Message sur le rafraîchissement automatique
-    st.info("ℹ️ Les données se mettent à jour automatiquement toutes les 5 minutes")
+    st.info("Les données se mettent à jour automatiquement toutes les 5 minutes")
