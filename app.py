@@ -9,6 +9,7 @@ from modules.backtesting import (apply_strategy_returns, build_equity_curves,
                                  compute_returns, apply_strategy_position, compute_cumulative_returns,
                                  backtest_complete,
                                  compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr, compute_total_return)
+from modules.prediction import predict_future_prices_simple
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
