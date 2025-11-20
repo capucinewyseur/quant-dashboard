@@ -10,10 +10,10 @@ cd /path/to/quant-dashboard
 ```
 
 Le script va :
-- ✅ Détecter automatiquement les chemins (projet, Python)
-- ✅ Créer le dossier `reports/` si nécessaire
-- ✅ Configurer le cron job pour 20h chaque jour
-- ✅ Vérifier que tout fonctionne
+- Détecter automatiquement les chemins (projet, Python)
+- Créer le dossier `reports/` si nécessaire
+- Configurer le cron job pour 20h chaque jour
+- Vérifier que tout fonctionne
 
 ## Installation Manuelle
 

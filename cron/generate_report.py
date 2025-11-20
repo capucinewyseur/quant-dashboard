@@ -144,7 +144,7 @@ END OF REPORT
                 with open(report_filename, 'w') as f:
                     f.write(report_content)
                 
-                print(f"✅ Report generated successfully: {report_filename}")
+                print(f"Report generated successfully: {report_filename}")
                 print(report_content)
                 
             else:

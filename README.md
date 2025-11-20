@@ -62,10 +62,10 @@ cd /path/to/quant-dashboard
 ```
 
 This script will:
-- ✅ Automatically detect paths (project, Python)
-- ✅ Create the `reports/` directory if needed
-- ✅ Configure the cron job to run every day at 8:00 PM (20:00)
-- ✅ Verify everything works
+- Automatically detect paths (project, Python)
+- Create the `reports/` directory if needed
+- Configure the cron job to run every day at 8:00 PM (20:00)
+- Verify everything works
 
 ### Manual Setup
 

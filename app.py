@@ -121,7 +121,7 @@ if page == "Single Asset":
     # 2. Valeur cumulée de la stratégie (axe Y droit)
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
         st.markdown("---")
-        st.subheader(f"📊 Main Chart - Raw Asset Price vs Cumulative Strategy Value")
+        st.subheader(f"Main Chart - Raw Asset Price vs Cumulative Strategy Value")
         st.caption(f"Asset: {ticker} | Strategy: {strategy_name}")
         
         fig = go.Figure()
