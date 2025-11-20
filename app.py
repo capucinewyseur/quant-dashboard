@@ -328,7 +328,7 @@ if page == "Single Asset":
                     total_return_display = f"{total_return:.2%}" if not np.isnan(total_return) else "N/A"
                     st.metric("Total Return", total_return_display)
     
-    # Bloc KPIs simples (prix actuel, rendement jour, vol 20j)
+    # Daily KPIs: current price, daily return, 20-day volatility
     st.markdown("---")
     st.subheader("Daily KPIs")
     last_price = float(df["Close"].iloc[-1])
