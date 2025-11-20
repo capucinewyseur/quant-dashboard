@@ -116,14 +116,15 @@ if page == "Single Asset":
                     cagr_display = f"{cagr:.2%}" if not np.isnan(cagr) else "N/A"
                     st.metric("CAGR", cagr_display)
     
-    # Bloc KPIs
+    # Bloc KPIs simples (prix actuel, rendement jour, vol 20j)
     st.markdown("---")
+    st.subheader("KPIs du jour")
     last_price = float(df["Close"].iloc[-1])
     daily_ret = float(df["return"].iloc[-1])
     vol_20d = float(df["return"].rolling(20).std().iloc[-1]) * np.sqrt(252)
     
     col1, col2, col3 = st.columns(3)
-    col1.metric("Dernier prix", f"{last_price:.2f}")
+    col1.metric("Dernier prix", f"${last_price:.2f}")
     col2.metric("Rendement jour", f"{daily_ret:.2%}")
     col3.metric("Vol 20j annualisée", f"{vol_20d:.2%}")
     
