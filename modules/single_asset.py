@@ -83,20 +83,28 @@ def display_single_asset_module(ticker="AAPL"):
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            latest_close = data['Close'].iloc[-1]
+            latest_close = float(data['Close'].iloc[-1])
             st.metric("Dernier cours", f"${latest_close:.2f}")
         
         with col2:
-            daily_change = data['Close'].iloc[-1] - data['Open'].iloc[-1]
-            daily_change_pct = (daily_change / data['Open'].iloc[-1]) * 100
+            latest_close_val = float(data['Close'].iloc[-1])
+            latest_open_val = float(data['Open'].iloc[-1])
+            daily_change = latest_close_val - latest_open_val
+            daily_change_pct = (daily_change / latest_open_val) * 100
             st.metric("Variation journalière", f"${daily_change:.2f}", f"{daily_change_pct:.2f}%")
         
         with col3:
-            high_24h = data_recent['High'].max() if not data_recent.empty else data['High'].iloc[-1]
+            if not data_recent.empty:
+                high_24h = float(data_recent['High'].max())
+            else:
+                high_24h = float(data['High'].iloc[-1])
             st.metric("Max récent", f"${high_24h:.2f}")
         
         with col4:
-            low_24h = data_recent['Low'].min() if not data_recent.empty else data['Low'].iloc[-1]
+            if not data_recent.empty:
+                low_24h = float(data_recent['Low'].min())
+            else:
+                low_24h = float(data['Low'].iloc[-1])
             st.metric("Min récent", f"${low_24h:.2f}")
         
         # KPIs sur les rendements
@@ -104,10 +112,10 @@ def display_single_asset_module(ticker="AAPL"):
         
         # Calcul des KPIs
         returns = data['return'].dropna()
-        mean_return = returns.mean() * 100  # En pourcentage
-        volatility = returns.std() * np.sqrt(252) * 100  # Volatilité annualisée
-        sharpe_ratio = (mean_return / 100 * 252) / (volatility / 100) if volatility > 0 else 0
-        max_drawdown = ((data['Close'] / data['Close'].cummax()) - 1).min() * 100
+        mean_return = float(returns.mean()) * 100  # En pourcentage
+        volatility = float(returns.std()) * np.sqrt(252) * 100  # Volatilité annualisée
+        sharpe_ratio = float((mean_return / 100 * 252) / (volatility / 100)) if volatility > 0 else 0.0
+        max_drawdown = float(((data['Close'] / data['Close'].cummax()) - 1).min()) * 100
         
         col1, col2, col3, col4 = st.columns(4)
         
