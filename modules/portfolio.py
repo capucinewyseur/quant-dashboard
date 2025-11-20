@@ -5,6 +5,6 @@ def display_portfolio_module():
     """
     Affiche le module d'analyse de portefeuille
     """
-    st.subheader("Quant B)")
-    st.write("Ici viendront les simulations de portefeuille multi-actifs.")
+    st.subheader("Portfolio Module (Quant B)")
+    st.write("Multi-asset portfolio simulations will be implemented here.")
 
