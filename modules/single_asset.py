@@ -66,7 +66,7 @@ def display_single_asset_module(ticker="AAPL"):
         st.metric("Current Price (USD)", f"${current_price:.2f}" if isinstance(current_price, (int, float)) else current_price)
     
     # Récupération des données historiques avec rendements
-    with st.spinner("Récupération des données en cours..."):
+    with st.spinner("Loading data..."):
         # Données récentes pour l'affichage en temps réel
         try:
             ticker_obj = yf.Ticker(ticker)
