@@ -24,6 +24,7 @@ st.caption("Quantitative analysis dashboard for finance")
 st.sidebar.header("Navigation")
 st.sidebar.markdown("---")
 page = st.sidebar.radio("Module", ["Single Asset", "Portfolio"])
+st.sidebar.markdown("---")
 
 # Sélection du ticker dans la sidebar
 ticker = st.sidebar.text_input("Ticker", "AAPL")
