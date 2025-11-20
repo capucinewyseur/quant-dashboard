@@ -120,13 +120,13 @@ def display_single_asset_module(ticker="AAPL"):
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Rendement moyen annuel", f"{mean_return * 252:.2f}%")
+            st.metric("Annual Mean Return", f"{mean_return * 252:.2f}%")
         
         with col2:
-            st.metric("Volatilité annualisée", f"{volatility:.2f}%")
+            st.metric("Annualized Volatility", f"{volatility:.2f}%")
         
         with col3:
-            st.metric("Ratio de Sharpe", f"{sharpe_ratio:.2f}")
+            st.metric("Sharpe Ratio", f"{sharpe_ratio:.2f}")
         
         with col4:
             st.metric("Max Drawdown", f"{max_drawdown:.2f}%")
