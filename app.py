@@ -53,7 +53,7 @@ periodicity_map = {
 }
 interval = periodicity_map[periodicity]
 
-# Sélection de la stratégie dans la sidebar
+# Strategy selection
 st.sidebar.markdown("---")
 strategy_name = st.sidebar.selectbox(
     "Strategy",
@@ -61,16 +61,16 @@ strategy_name = st.sidebar.selectbox(
 )
 
 if page == "Single Asset":
-    # Chargement des données avec le ticker et la périodicité sélectionnés
+    # Load data with selected ticker and periodicity
     df = load_asset(ticker, interval=interval)
     
-    # Ajout des indicateurs techniques
+    # Add technical indicators
     rsi_window = st.sidebar.slider("RSI window", 5, 30, 14)
     df = add_rsi(df, window=rsi_window)
     df = add_macd(df)
     df = add_sma(df, window=20)
     
-    # Application de la stratégie sélectionnée
+    # Apply selected strategy
     if strategy_name == "Buy & Hold":
         strat_df = buy_and_hold(df)
     elif strategy_name == "RSI strategy":
@@ -81,9 +81,9 @@ if page == "Single Asset":
         momentum_period = st.sidebar.slider("Momentum period", 5, 50, 12)
         strat_df = momentum_strategy(df, period=momentum_period)
     
-    # Backtesting complet : calculer les retours, appliquer la stratégie, construire les courbes
+    # Complete backtesting: calculate returns, apply strategy, build equity curves
     if 'strat_df' in locals():
-        # Utiliser la fonction complète de backtesting
+        # Use complete backtesting function
         strat_df = backtest_complete(strat_df, 
                                      position_col="Position",
                                      price_col="Close",
@@ -294,17 +294,17 @@ if page == "Single Asset":
     st.subheader("RSI")
     st.line_chart(df["RSI"])
     
-    # Affichage des positions de la stratégie
+    # Display strategy positions
     if 'strat_df' in locals():
         st.subheader("Strategy Positions")
         st.line_chart(strat_df["Position"])
         
-        # Affichage des equity curves
+        # Display equity curves
         if "Equity_Asset" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
             st.subheader("Equity Curves - Strategy vs Buy & Hold Comparison")
             st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
             
-            # Affichage des métriques de performance
+            # Display performance metrics
             if vol_annual is not None and sharpe is not None and max_dd is not None and cagr is not None and total_return is not None:
                 st.markdown("---")
                 st.subheader("Strategy Performance Metrics")
