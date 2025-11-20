@@ -63,7 +63,7 @@ def display_single_asset_module(ticker="AAPL"):
         current_price = "N/A"
     
     with col2:
-        st.metric("Prix actuel (USD)", f"${current_price:.2f}" if isinstance(current_price, (int, float)) else current_price)
+        st.metric("Current Price (USD)", f"${current_price:.2f}" if isinstance(current_price, (int, float)) else current_price)
     
     # Récupération des données historiques avec rendements
     with st.spinner("Récupération des données en cours..."):
