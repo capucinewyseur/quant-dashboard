@@ -9,6 +9,7 @@ from modules.backtesting import (apply_strategy_returns, build_equity_curves,
                                  compute_returns, apply_strategy_position, compute_cumulative_returns,
                                  backtest_complete,
                                  compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr, compute_total_return)
+from modules.prediction import predict_future_prices
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
@@ -119,10 +120,14 @@ if page == "Single Asset":
     # Ce graphique doit afficher 2 courbes :
     # 1. Prix brut de l'actif (axe Y gauche)
     # 2. Valeur cumulée de la stratégie (axe Y droit)
+    # BONUS: Ajout des prédictions avec bande de confiance
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
         st.markdown("---")
         st.subheader(f"Main Chart - Raw Asset Price vs Cumulative Strategy Value")
         st.caption(f"Asset: {ticker} | Strategy: {strategy_name}")
+        
+        # BONUS: Prédiction simple avec Linear Regression
+        predictions = predict_future_prices(df, days_ahead=30, price_col="Close")
         
         fig = go.Figure()
         
@@ -136,6 +141,44 @@ if page == "Single Asset":
             yaxis='y',
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'
         ))
+        
+        # BONUS: Prédictions futures avec bande de confiance
+        if not predictions.empty:
+            # Ligne de prédiction
+            fig.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions['Predicted_Price'],
+                mode='lines',
+                name='Predicted Price (30 days)',
+                line=dict(color='#ff7f0e', width=2, dash='dash'),
+                yaxis='y',
+                hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Predicted: $%{y:.2f}<extra></extra>'
+            ))
+            
+            # Bande de confiance supérieure
+            fig.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions['Upper_Bound'],
+                mode='lines',
+                name='Upper Confidence Bound',
+                line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
+                yaxis='y',
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+            
+            # Bande de confiance inférieure (remplie)
+            fig.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions['Lower_Bound'],
+                mode='lines',
+                name='Confidence Interval',
+                fill='tonexty',
+                fillcolor='rgba(255, 127, 14, 0.1)',
+                line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
+                yaxis='y',
+                hovertemplate='<b>Confidence Interval</b><br>Date: %{x}<br>Lower: $%{y:.2f}<extra></extra>'
+            ))
         
         # Courbe 2 : Valeur cumulée de la stratégie (OBLIGATOIRE - axe Y droit)
         fig.add_trace(go.Scatter(
