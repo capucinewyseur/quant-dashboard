@@ -53,7 +53,21 @@ The dashboard will be available at `http://localhost:8501`
 
 The project includes an automated daily report generator that runs via cron.
 
-### Setup
+### Quick Setup (Automatic Installation)
+
+**Install the cron job automatically** (recommended):
+```bash
+cd /path/to/quant-dashboard
+./cron/install_cron.sh
+```
+
+This script will:
+- ✅ Automatically detect paths (project, Python)
+- ✅ Create the `reports/` directory if needed
+- ✅ Configure the cron job to run every day at 8:00 PM (20:00)
+- ✅ Verify everything works
+
+### Manual Setup
 
 1. **Generate a test report manually**:
 ```bash
@@ -85,6 +99,8 @@ crontab -l
 ```bash
 tail -f cron/cron.log
 ```
+
+**For more details, see**: `cron/README_CRON.md`
 
 ### Report Contents
 
