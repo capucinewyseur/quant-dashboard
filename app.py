@@ -61,33 +61,92 @@ strategy_name = st.sidebar.selectbox(
 
 if page == "Single Asset":
     # Chargement des données avec le ticker et la périodicité sélectionnés
-    df = load_asset(ticker, interval=interval)
+    try:
+        with st.spinner(f"Loading data for {ticker}..."):
+            df = load_asset(ticker, interval=interval)
+        
+        # Vérifier si les données sont vides (API down, ticker invalide, etc.)
+        if df.empty:
+            st.error(f"❌ Impossible de charger les données pour le ticker '{ticker}'. Vérifiez que le ticker est valide et que l'API Yahoo Finance est accessible.")
+            st.info("💡 Essayez avec un ticker standard comme AAPL, MSFT, GOOGL, etc.")
+            st.stop()
+        
+        # Vérifier qu'il y a suffisamment de données
+        if len(df) < 10:
+            st.warning(f"⚠️ Peu de données disponibles pour {ticker} ({len(df)} lignes). Les calculs peuvent être imprécis.")
+        
+    except Exception as e:
+        st.error(f"❌ Erreur lors du chargement des données : {str(e)}")
+        st.info("💡 Vérifiez votre connexion internet et que le ticker est valide.")
+        st.stop()
     
-    # Ajout des indicateurs techniques
-    rsi_window = st.sidebar.slider("RSI window", 5, 30, 14)
-    df = add_rsi(df, window=rsi_window)
-    df = add_macd(df)
-    df = add_sma(df, window=20)
+    # Ajout des indicateurs techniques avec gestion d'erreurs
+    try:
+        rsi_window = st.sidebar.slider("RSI window", 5, 30, 14)
+        df = add_rsi(df, window=rsi_window)
+        df = add_macd(df)
+        df = add_sma(df, window=20)
+        
+        # Vérifier que les indicateurs ont été calculés correctement
+        if df.empty or 'RSI' not in df.columns:
+            st.error("❌ Erreur lors du calcul des indicateurs techniques.")
+            st.stop()
+            
+    except Exception as e:
+        st.error(f"❌ Erreur lors du calcul des indicateurs techniques : {str(e)}")
+        st.stop()
     
-    # Application de la stratégie sélectionnée
-    if strategy_name == "Buy & Hold":
-        strat_df = buy_and_hold(df)
-    elif strategy_name == "RSI strategy":
-        rsi_low = st.sidebar.slider("RSI low", 10, 40, 30)
-        rsi_high = st.sidebar.slider("RSI high", 60, 90, 70)
-        strat_df = rsi_strategy(df, low=rsi_low, high=rsi_high)
-    else:
-        momentum_period = st.sidebar.slider("Momentum period", 5, 50, 12)
-        strat_df = momentum_strategy(df, period=momentum_period)
+    # Application de la stratégie sélectionnée avec gestion d'erreurs
+    try:
+        if strategy_name == "Buy & Hold":
+            strat_df = buy_and_hold(df)
+        elif strategy_name == "RSI strategy":
+            rsi_low = st.sidebar.slider("RSI low", 10, 40, 30)
+            rsi_high = st.sidebar.slider("RSI high", 60, 90, 70)
+            strat_df = rsi_strategy(df, low=rsi_low, high=rsi_high)
+        else:
+            momentum_period = st.sidebar.slider("Momentum period", 5, 50, 12)
+            strat_df = momentum_strategy(df, period=momentum_period)
+        
+        # Vérifier que la stratégie a créé la colonne Position
+        if 'Position' not in strat_df.columns:
+            st.error("❌ Erreur : la stratégie n'a pas créé de colonne 'Position'.")
+            st.stop()
+            
+    except Exception as e:
+        st.error(f"❌ Erreur lors de l'application de la stratégie : {str(e)}")
+        st.stop()
     
     # Backtesting complet : calculer les retours, appliquer la stratégie, construire les courbes
     if 'strat_df' in locals():
-        # Utiliser la fonction complète de backtesting
-        strat_df = backtest_complete(strat_df, 
-                                     position_col="Position",
-                                     price_col="Close",
-                                     return_col="return",
-                                     initial_capital=1.0)
+        try:
+            # Vérifier qu'il n'y a pas trop de NaN qui cassent le backtest
+            nan_count = strat_df.isnull().sum().sum()
+            if nan_count > len(strat_df) * 0.5:  # Plus de 50% de NaN
+                st.warning(f"⚠️ Beaucoup de valeurs manquantes ({nan_count} NaN). Les résultats peuvent être imprécis.")
+            
+            # Utiliser la fonction complète de backtesting
+            strat_df = backtest_complete(strat_df, 
+                                         position_col="Position",
+                                         price_col="Close",
+                                         return_col="return",
+                                         initial_capital=1.0)
+            
+            # Vérifier que le backtesting a réussi
+            if strat_df.empty:
+                st.error("❌ Erreur : le backtesting n'a pas pu être effectué (données insuffisantes).")
+                st.stop()
+            
+            # Vérifier que les colonnes nécessaires existent
+            required_cols = ["StrategyReturn", "Equity_Strategy"]
+            if not all(col in strat_df.columns for col in required_cols):
+                st.error("❌ Erreur : le backtesting n'a pas créé toutes les colonnes nécessaires.")
+                st.stop()
+                
+        except Exception as e:
+            st.error(f"❌ Erreur lors du backtesting : {str(e)}")
+            st.info("💡 Vérifiez que les données sont valides et qu'il n'y a pas trop de valeurs manquantes.")
+            st.stop()
         
         # Calcul des métriques de performance
         vol_annual = None
@@ -210,17 +269,29 @@ if page == "Single Asset":
                     total_return_display = f"{total_return:.2%}" if not np.isnan(total_return) else "N/A"
                     st.metric("Total Return", total_return_display)
     
-    # Bloc KPIs simples (prix actuel, rendement jour, vol 20j)
-    st.markdown("---")
-    st.subheader("Daily KPIs")
-    last_price = float(df["Close"].iloc[-1])
-    daily_ret = float(df["return"].iloc[-1])
-    vol_20d = float(df["return"].rolling(20).std().iloc[-1]) * np.sqrt(252)
-    
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Last Price", f"${last_price:.2f}")
-    col2.metric("Daily Return", f"{daily_ret:.2%}")
-    col3.metric("20d Annualized Vol", f"{vol_20d:.2%}")
+    # Bloc KPIs simples (prix actuel, rendement jour, vol 20j) avec gestion d'erreurs
+    try:
+        st.markdown("---")
+        st.subheader("Daily KPIs")
+        
+        # Vérifier que les colonnes existent et ne sont pas vides
+        if df.empty or "Close" not in df.columns or "return" not in df.columns:
+            st.warning("⚠️ Données insuffisantes pour calculer les KPIs quotidiens.")
+        else:
+            last_price = float(df["Close"].iloc[-1])
+            daily_ret = float(df["return"].iloc[-1]) if not np.isnan(df["return"].iloc[-1]) else 0.0
+            
+            # Calcul de la volatilité avec gestion des NaN
+            returns_20d = df["return"].rolling(20).std()
+            vol_20d = float(returns_20d.iloc[-1]) * np.sqrt(252) if not np.isnan(returns_20d.iloc[-1]) else 0.0
+            
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Last Price", f"${last_price:.2f}")
+            col2.metric("Daily Return", f"{daily_ret:.2%}")
+            col3.metric("20d Annualized Vol", f"{vol_20d:.2%}")
+            
+    except Exception as e:
+        st.warning(f"⚠️ Erreur lors du calcul des KPIs quotidiens : {str(e)}")
     
     # Afficher aussi le module détaillé avec le ticker sélectionné
     display_single_asset_module(ticker)
