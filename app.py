@@ -31,7 +31,7 @@ ticker = st.sidebar.text_input("Ticker", "AAPL")
 
 # Sélection de la stratégie dans la sidebar
 strategy_name = st.sidebar.selectbox(
-    "Stratégie",
+    "Strategy",
     ["Buy & Hold", "RSI strategy", "Momentum strategy"]
 )
 
