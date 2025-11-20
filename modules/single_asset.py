@@ -141,7 +141,7 @@ def display_single_asset_module(ticker="AAPL"):
             x=data.index,
             y=data['Close'],
             mode='lines',
-            name='Prix de clôture',
+            name='Close Price',
             line=dict(color='#1f77b4', width=2)
         ))
         
