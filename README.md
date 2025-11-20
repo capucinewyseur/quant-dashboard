@@ -108,7 +108,20 @@ The dashboard includes a simple predictive model using **Linear Regression** to 
   - Separate dedicated prediction chart below the main chart
   - Prediction summary metrics (predicted price, expected change, confidence range)
 
-The prediction model uses historical price data to fit a linear trend and extrapolates it into the future. Note that this is a simple model for demonstration purposes and should not be used for actual trading decisions.
+The prediction model uses historical price data to fit a linear trend and extrapolates it into the future. 
+
+**How it works:**
+- Fits a straight line (y = a*x + b) through all historical prices
+- Calculates the slope (trend direction) and intercept
+- Extrapolates this line 30 days ahead
+- Calculates confidence interval (±2 standard deviations)
+
+**Why it's not very accurate:**
+- Stock prices don't follow linear trends (they're volatile and non-linear)
+- Ignores market cycles, volatility patterns, and external factors
+- Very simple model for demonstration only
+
+**Note**: This is a simple model for demonstration purposes and should not be used for actual trading decisions. Real trading would require more sophisticated models (ARIMA, LSTM, Random Forest, etc.).
 
 ### Running Daily Reports Manually
 
