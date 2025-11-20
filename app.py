@@ -20,6 +20,7 @@ st.title("Quant Dashboard - Projet Python, Git, Linux pour Finance")
 st.caption("Dashboard d'analyse quantitative pour la finance")
 
 st.sidebar.header("Navigation")
+st.sidebar.markdown("---")
 page = st.sidebar.radio("Module", ["Single Asset", "Portfolio"])
 
 # Sélection du ticker dans la sidebar
