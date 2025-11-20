@@ -59,7 +59,16 @@ if page == "Single Asset":
         # S'assurer que la colonne return existe et est propre
         if 'return' not in strat_df.columns:
             strat_df["return"] = strat_df["Close"].pct_change()
-        strat_df = strat_df.dropna(subset=['return', 'Position'])
+        
+        # Vérifier que les colonnes nécessaires existent avant dropna
+        cols_to_drop = []
+        if 'return' in strat_df.columns:
+            cols_to_drop.append('return')
+        if 'Position' in strat_df.columns:
+            cols_to_drop.append('Position')
+        
+        if cols_to_drop:
+            strat_df = strat_df.dropna(subset=cols_to_drop)
         
         if len(strat_df) > 0 and 'return' in strat_df.columns and 'Position' in strat_df.columns:
             strat_df = apply_strategy_returns(strat_df, return_col="return", position_col="Position")
