@@ -84,7 +84,7 @@ if page == "Single Asset":
     
     # Graphique principal : Prix brut + Valeur cumulée de la stratégie
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
-        st.subheader(f"Graphique principal - Prix {ticker} vs Performance stratégie ({strategy_name})")
+        st.subheader(f"Main Chart - {ticker} Price vs Strategy Performance ({strategy_name})")
         
         fig = go.Figure()
         
