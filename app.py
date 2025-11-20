@@ -90,6 +90,12 @@ if page == "Single Asset":
                                      initial_capital=1.0)
         
         # Calcul des métriques de performance
+        vol_annual = None
+        sharpe = None
+        max_dd = None
+        cagr = None
+        total_return = None
+        
         if "StrategyReturn" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
             strat_ret = strat_df["StrategyReturn"].dropna()
             equity_strat = strat_df["Equity_Strategy"].dropna()
@@ -181,7 +187,8 @@ if page == "Single Asset":
             st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
             
             # Affichage des métriques de performance
-            if 'vol_annual' in locals() and 'sharpe' in locals() and 'max_dd' in locals() and 'cagr' in locals() and 'total_return' in locals():
+            if vol_annual is not None and sharpe is not None and max_dd is not None and cagr is not None and total_return is not None:
+                st.markdown("---")
                 st.subheader("Strategy Performance Metrics")
                 col1, col2, col3, col4, col5 = st.columns(5)
                 
