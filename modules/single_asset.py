@@ -78,7 +78,7 @@ def display_single_asset_module(ticker="AAPL"):
     
     if not data.empty and not data_recent.empty:
         # Afficher les statistiques clés
-        st.subheader("Statistiques clés")
+        st.subheader("Key Statistics")
         
         col1, col2, col3, col4 = st.columns(4)
         
