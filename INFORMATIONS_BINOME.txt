@@ -1,0 +1,61 @@
+================================================================================
+INFORMATIONS POUR LE BINÔME - PARTIE B
+================================================================================
+
+📦 REPOSITORY GIT
+-----------------
+URL: https://github.com/capucinewyseur/quant-dashboard.git
+Branche actuelle: ptAcapucine
+Status: Partie A complète et fonctionnelle
+
+🔑 ACCÈS AWS (si nécessaire)
+-----------------------------
+Clé SSH: ~/Documents/api/capucine.keyperm
+(ou vérifier le chemin exact dans Documents/api/)
+
+📁 STRUCTURE DU PROJET
+----------------------
+quant-dashboard/
+├── app.py                 # Application principale
+├── modules/
+│   ├── portfolio.py      # À IMPLÉMENTER (Partie B)
+│   └── ...               # Autres modules (Partie A complète)
+├── requirements.txt       # Dépendances
+└── README.md             # Documentation
+
+🚀 DÉMARRAGE RAPIDE
+-------------------
+1. git clone https://github.com/capucinewyseur/quant-dashboard.git
+2. cd quant-dashboard
+3. python3 -m venv venv
+4. source venv/bin/activate
+5. pip install -r requirements.txt
+6. streamlit run app.py
+
+📝 PARTIE A (FAITE)
+-------------------
+✅ Single Asset Analysis Module
+✅ 3 stratégies (Buy & Hold, RSI, Momentum)
+✅ Métriques de performance
+✅ Graphique principal avec 2 courbes
+✅ Modèle prédictif (bonus)
+
+🎯 PARTIE B (À FAIRE)
+----------------------
+Module Portfolio Analysis:
+- Multi-asset analysis
+- Portfolio strategies
+- Portfolio metrics
+- Visualizations
+- Interactive controls
+
+📚 DOCUMENTATION
+----------------
+- README.md: Documentation principale
+- HANDOVER_PARTIE_B.md: Guide complet pour le binôme
+- VALIDATION_QUANT_A.md: Validation Partie A
+
+================================================================================
+Voir HANDOVER_PARTIE_B.md pour tous les détails
+================================================================================
+
