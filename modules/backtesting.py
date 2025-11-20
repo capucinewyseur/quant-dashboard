@@ -81,3 +81,53 @@ def build_equity_curves(df, asset_return_col="Return", strat_return_col="Strateg
     
     return df
 
+def compute_volatility(returns: pd.Series, periods_per_year: int = 252) -> float:
+    """
+    Volatilité annualisée d'une série de retours.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Série de retours (par ex. StrategyReturn).
+    periods_per_year : int
+        252 pour daily, 52 pour weekly, 12 pour monthly.
+
+    Returns
+    -------
+    float
+        Volatilité annualisée.
+    """
+    return float(returns.std(ddof=0) * np.sqrt(periods_per_year))
+
+def compute_sharpe_ratio(returns: pd.Series,
+                         periods_per_year: int = 252,
+                         risk_free_rate: float = 0.0) -> float:
+    """
+    Sharpe ratio annualisé.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Série de retours de la stratégie.
+    periods_per_year : int
+        252 pour daily, 52 pour weekly, 12 pour monthly.
+    risk_free_rate : float
+        Taux sans risque annuel (e.g. 0.02 pour 2%).
+
+    Returns
+    -------
+    float
+        Sharpe ratio annualisé.
+    """
+    if returns.std(ddof=0) == 0:
+        return np.nan
+    
+    rf_per_period = risk_free_rate / periods_per_year
+    excess_returns = returns - rf_per_period
+    
+    mean_excess = excess_returns.mean()
+    std_excess = excess_returns.std(ddof=0)
+    
+    sharpe = (mean_excess / std_excess) * np.sqrt(periods_per_year)
+    return float(sharpe)
+
