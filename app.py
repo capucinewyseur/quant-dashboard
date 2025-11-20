@@ -143,6 +143,31 @@ if page == "Single Asset":
         
         # Step 3: Add predictions if available
         if not predictions.empty:
+            # Step 4: Add confidence interval (upper bound)
+            fig.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions['Upper_Bound'],
+                mode='lines',
+                name='Upper Confidence',
+                line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
+                yaxis='y',
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+            
+            # Step 4: Add confidence interval (lower bound with fill)
+            fig.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions['Lower_Bound'],
+                mode='lines',
+                name='Confidence Interval',
+                fill='tonexty',
+                fillcolor='rgba(255, 127, 14, 0.1)',
+                line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
+                yaxis='y',
+                hovertemplate='<b>Confidence Interval</b><br>Date: %{x}<br>Lower: $%{y:.2f}<extra></extra>'
+            ))
+            
             # Prediction line
             fig.add_trace(go.Scatter(
                 x=predictions.index,
