@@ -60,25 +60,21 @@ if page == "Single Asset":
         if 'return' not in strat_df.columns:
             strat_df["return"] = strat_df["Close"].pct_change()
         
-        # Nettoyer les NaN de return seulement (Position sera créée par les stratégies)
-        if 'return' in strat_df.columns:
-            strat_df = strat_df.dropna(subset=['return'])
+        # Nettoyer les NaN - utiliser dropna() sans subset pour éviter les erreurs
+        # On nettoie toutes les colonnes NaN, puis on vérifie que return et Position existent
+        strat_df = strat_df.dropna()
         
-        # Vérifier que Position existe (créée par les stratégies)
-        if 'Position' in strat_df.columns:
-            # Nettoyer aussi les NaN de Position si nécessaire
-            strat_df = strat_df.dropna(subset=['Position'])
+        # Vérifier que les colonnes nécessaires existent après nettoyage
+        if len(strat_df) > 0 and 'return' in strat_df.columns and 'Position' in strat_df.columns:
+            strat_df = apply_strategy_returns(strat_df, return_col="return", position_col="Position")
+            strat_df = build_equity_curves(strat_df, asset_return_col="return", strat_return_col="StrategyReturn")
             
-            if len(strat_df) > 0 and 'return' in strat_df.columns:
-                strat_df = apply_strategy_returns(strat_df, return_col="return", position_col="Position")
-                strat_df = build_equity_curves(strat_df, asset_return_col="return", strat_return_col="StrategyReturn")
-                
-                # Calcul des métriques de performance
-                if "StrategyReturn" in strat_df.columns:
-                    strat_ret = strat_df["StrategyReturn"].dropna()
-                    if len(strat_ret) > 0:
-                        vol_annual = compute_volatility(strat_ret, periods_per_year=252)
-                        sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=252, risk_free_rate=0.0)
+            # Calcul des métriques de performance
+            if "StrategyReturn" in strat_df.columns:
+                strat_ret = strat_df["StrategyReturn"].dropna()
+                if len(strat_ret) > 0:
+                    vol_annual = compute_volatility(strat_ret, periods_per_year=252)
+                    sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=252, risk_free_rate=0.0)
     
     st.subheader(f"Prix de {ticker}")
     st.line_chart(df["Close"])
