@@ -84,28 +84,28 @@ def display_single_asset_module(ticker="AAPL"):
         
         with col1:
             latest_close = float(data['Close'].iloc[-1])
-            st.metric("Dernier cours", f"${latest_close:.2f}")
+            st.metric("Last Close", f"${latest_close:.2f}")
         
         with col2:
             latest_close_val = float(data['Close'].iloc[-1])
             latest_open_val = float(data['Open'].iloc[-1])
             daily_change = latest_close_val - latest_open_val
             daily_change_pct = (daily_change / latest_open_val) * 100
-            st.metric("Variation journalière", f"${daily_change:.2f}", f"{daily_change_pct:.2f}%")
+            st.metric("Daily Change", f"${daily_change:.2f}", f"{daily_change_pct:.2f}%")
         
         with col3:
             if not data_recent.empty:
                 high_24h = float(data_recent['High'].max())
             else:
                 high_24h = float(data['High'].iloc[-1])
-            st.metric("Max récent", f"${high_24h:.2f}")
+            st.metric("Recent High", f"${high_24h:.2f}")
         
         with col4:
             if not data_recent.empty:
                 low_24h = float(data_recent['Low'].min())
             else:
                 low_24h = float(data['Low'].iloc[-1])
-            st.metric("Min récent", f"${low_24h:.2f}")
+            st.metric("Recent Low", f"${low_24h:.2f}")
         
         # KPIs sur les rendements
         st.subheader("KPIs sur les rendements")
