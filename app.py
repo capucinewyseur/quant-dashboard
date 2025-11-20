@@ -18,8 +18,8 @@ st.set_page_config(
 # Rafraîchissement automatique toutes les 5 minutes (300000 millisecondes)
 st_autorefresh(interval=5 * 60 * 1000, key="data_refresh")
 
-st.title("Quant Dashboard - Projet Python, Git, Linux pour Finance")
-st.caption("Dashboard d'analyse quantitative pour la finance")
+st.title("Quant Dashboard - Python, Git, Linux Project for Finance")
+st.caption("Quantitative analysis dashboard for finance")
 
 st.sidebar.header("Navigation")
 st.sidebar.markdown("---")
