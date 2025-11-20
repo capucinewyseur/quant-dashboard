@@ -148,15 +148,15 @@ if page == "Single Asset":
             
             # Affichage des métriques de performance
             if 'vol_annual' in locals() and 'sharpe' in locals() and 'max_dd' in locals() and 'cagr' in locals():
-                st.subheader("Métriques de performance de la stratégie")
+                st.subheader("Strategy Performance Metrics")
                 col1, col2, col3, col4 = st.columns(4)
                 
                 with col1:
-                    st.metric("Volatilité annualisée", f"{vol_annual:.2%}")
+                    st.metric("Annualized Volatility", f"{vol_annual:.2%}")
                 
                 with col2:
                     sharpe_display = f"{sharpe:.2f}" if not np.isnan(sharpe) else "N/A"
-                    st.metric("Ratio de Sharpe", sharpe_display)
+                    st.metric("Sharpe Ratio", sharpe_display)
                 
                 with col3:
                     max_dd_display = f"{max_dd:.2%}" if not np.isnan(max_dd) else "N/A"
