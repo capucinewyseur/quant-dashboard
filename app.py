@@ -40,6 +40,17 @@ if page == "Single Asset":
     df = add_macd(df)
     df = add_sma(df, window=20)
     
+    # Application de la stratégie sélectionnée
+    if strategy_name == "Buy & Hold":
+        strat_df = buy_and_hold(df)
+    elif strategy_name == "RSI strategy":
+        rsi_low = st.sidebar.slider("RSI low", 10, 40, 30)
+        rsi_high = st.sidebar.slider("RSI high", 60, 90, 70)
+        strat_df = rsi_strategy(df, low=rsi_low, high=rsi_high)
+    else:
+        momentum_period = st.sidebar.slider("Momentum period", 5, 50, 12)
+        strat_df = momentum_strategy(df, period=momentum_period)
+    
     st.subheader(f"Prix de {ticker}")
     st.line_chart(df["Close"])
     
