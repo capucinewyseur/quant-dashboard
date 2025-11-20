@@ -40,3 +40,31 @@ def rsi_strategy(df, low=30, high=70):
     df.loc[df["RSI"] > high, "Position"] = 0.0
     return df
 
+def momentum_strategy(df, period=12):
+    """
+    Stratégie basée sur le Momentum (version simple)
+    
+    Principe:
+    - Momentum > 0 ⇒ tendance haussière ⇒ on achète (Position = 1.0)
+    - Momentum < 0 ⇒ tendance baissière ⇒ on sort / cash (Position = 0.0)
+    
+    Le momentum le plus simple = Close(t) - Close(t-n)
+    
+    Args:
+        df: DataFrame avec colonnes 'Close'
+        period: Nombre de périodes pour calculer le momentum (défaut: 12)
+    
+    Returns:
+        DataFrame avec colonnes 'Momentum' et 'Position' ajoutées
+    """
+    df = df.copy()
+    
+    # Momentum simple : différence de prix sur n périodes
+    df["Momentum"] = df["Close"] - df["Close"].shift(period)
+    
+    df["Position"] = 0.0
+    df.loc[df["Momentum"] > 0, "Position"] = 1.0
+    df.loc[df["Momentum"] < 0, "Position"] = 0.0
+    
+    return df
+
