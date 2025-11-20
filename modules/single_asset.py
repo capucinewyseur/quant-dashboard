@@ -46,7 +46,7 @@ def display_single_asset_module(ticker="AAPL"):
     Args:
         ticker: Symbole de l'actif à analyser (défaut: "AAPL")
     """
-    st.header(f"Analyse de l'action {ticker}")
+    st.header(f"{ticker} Stock Analysis")
     
     # Afficher le statut de mise à jour
     col1, col2, col3 = st.columns(3)
