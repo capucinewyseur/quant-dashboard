@@ -265,12 +265,16 @@ if page == "Single Asset":
             ))
             
             # Vertical line to separate historical from prediction
+            # Using add_shape instead of add_vline to avoid Timestamp issues
             last_historical_date = recent_df.index[-1]
-            # Convert Timestamp to string for Plotly compatibility
-            fig_pred.add_vline(
-                x=str(last_historical_date),
-                line_dash="dot",
-                line_color="gray",
+            fig_pred.add_shape(
+                type="line",
+                x0=last_historical_date,
+                x1=last_historical_date,
+                y0=0,
+                y1=1,
+                yref="paper",
+                line=dict(color="gray", width=1, dash="dot"),
                 annotation_text="Today",
                 annotation_position="top"
             )
