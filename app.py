@@ -17,6 +17,7 @@ st.set_page_config(
 st_autorefresh(interval=5 * 60 * 1000, key="data_refresh")
 
 st.title("Quant Dashboard - Projet Python, Git, Linux pour Finance")
+st.caption("Dashboard d'analyse quantitative pour la finance")
 
 st.sidebar.header("Navigation")
 page = st.sidebar.radio("Module", ["Single Asset", "Portfolio"])
