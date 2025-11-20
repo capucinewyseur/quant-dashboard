@@ -39,11 +39,14 @@ def get_current_price():
         st.error(f"Erreur lors de la récupération du prix: {e}")
         return "N/A"
 
-def display_single_asset_module():
+def display_single_asset_module(ticker="AAPL"):
     """
-    Affiche le module d'analyse d'un actif unique (Apple)
+    Affiche le module d'analyse d'un actif unique
+    
+    Args:
+        ticker: Symbole de l'actif à analyser (défaut: "AAPL")
     """
-    st.header("Analyse de l'action Apple (AAPL)")
+    st.header(f"Analyse de l'action {ticker}")
     
     # Afficher le statut de mise à jour
     col1, col2, col3 = st.columns(3)
@@ -52,16 +55,26 @@ def display_single_asset_module():
         st.metric("Dernière mise à jour", datetime.now().strftime("%H:%M:%S"))
     
     # Récupération du prix actuel
-    current_price = get_current_price()
+    try:
+        ticker_obj = yf.Ticker(ticker)
+        info = ticker_obj.info
+        current_price = info.get('currentPrice', info.get('regularMarketPrice', 'N/A'))
+    except:
+        current_price = "N/A"
+    
     with col2:
         st.metric("Prix actuel (USD)", f"${current_price:.2f}" if isinstance(current_price, (int, float)) else current_price)
     
     # Récupération des données historiques avec rendements
     with st.spinner("Récupération des données en cours..."):
         # Données récentes pour l'affichage en temps réel
-        data_recent = get_apple_data(period="5d", interval="15m")
+        try:
+            ticker_obj = yf.Ticker(ticker)
+            data_recent = ticker_obj.history(period="5d", interval="15m")
+        except:
+            data_recent = pd.DataFrame()
         # Données historiques avec rendements pour les KPIs
-        data = load_asset("AAPL", start="2018-01-01", interval="1d")
+        data = load_asset(ticker, start="2018-01-01", interval="1d")
     
     if not data.empty and not data_recent.empty:
         # Afficher les statistiques clés
@@ -125,7 +138,7 @@ def display_single_asset_module():
         ))
         
         fig_price.update_layout(
-            title="Évolution du prix de l'action Apple (AAPL)",
+            title=f"Évolution du prix de l'action {ticker}",
             xaxis_title="Date",
             yaxis_title="Prix (USD)",
             hovermode='x unified',
@@ -155,7 +168,7 @@ def display_single_asset_module():
         fig_returns.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
         
         fig_returns.update_layout(
-            title="Rendements journaliers de l'action Apple (AAPL)",
+            title=f"Rendements journaliers de l'action {ticker}",
             xaxis_title="Date",
             yaxis_title="Rendement (%)",
             hovermode='x unified',
