@@ -24,6 +24,12 @@ page = st.sidebar.radio("Module", ["Single Asset", "Portfolio"])
 # Sélection du ticker dans la sidebar
 ticker = st.sidebar.text_input("Ticker", "AAPL")
 
+# Sélection de la stratégie dans la sidebar
+strategy_name = st.sidebar.selectbox(
+    "Stratégie",
+    ["Buy & Hold", "RSI strategy", "Momentum strategy"]
+)
+
 if page == "Single Asset":
     # Chargement des données avec le ticker sélectionné
     df = load_asset(ticker)
