@@ -138,7 +138,7 @@ if page == "Single Asset":
     
     # Affichage des positions de la stratégie
     if 'strat_df' in locals():
-        st.subheader("Positions de la stratégie")
+        st.subheader("Strategy Positions")
         st.line_chart(strat_df["Position"])
         
         # Affichage des equity curves
