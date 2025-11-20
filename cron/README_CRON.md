@@ -1,6 +1,6 @@
 # Configuration du Cron Job pour les Rapports Quotidiens
 
-## Installation Automatique (Recommandé)
+## Installation Automatique 
 
 Pour installer automatiquement le cron job qui génère un rapport tous les jours à 20h :
 
