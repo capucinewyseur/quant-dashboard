@@ -110,10 +110,10 @@ if page == "Single Asset":
         
         # Configuration avec deux axes Y
         fig.update_layout(
-            title=f"Prix brut vs Performance stratégie ({strategy_name})",
+            title=f"Raw Price vs Strategy Performance ({strategy_name})",
             xaxis_title="Date",
             yaxis=dict(
-                title=dict(text="Prix (USD)", font=dict(color='#1f77b4')),
+                title=dict(text="Price (USD)", font=dict(color='#1f77b4')),
                 tickfont=dict(color='#1f77b4')
             ),
             yaxis2=dict(
