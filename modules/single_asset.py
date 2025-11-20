@@ -146,9 +146,9 @@ def display_single_asset_module(ticker="AAPL"):
         ))
         
         fig_price.update_layout(
-            title=f"Évolution du prix de l'action {ticker}",
+            title=f"{ticker} Stock Price Evolution",
             xaxis_title="Date",
-            yaxis_title="Prix (USD)",
+            yaxis_title="Price (USD)",
             hovermode='x unified',
             height=400,
             showlegend=True
@@ -157,7 +157,7 @@ def display_single_asset_module(ticker="AAPL"):
         st.plotly_chart(fig_price, use_container_width=True)
         
         # Graphique de série temporelle - Rendements
-        st.subheader("Graphique de série temporelle - Rendements")
+        st.subheader("Time Series Chart - Returns")
         
         fig_returns = go.Figure()
         
@@ -166,7 +166,7 @@ def display_single_asset_module(ticker="AAPL"):
             x=data.index,
             y=data['return'] * 100,
             mode='lines',
-            name='Rendements journaliers',
+            name='Daily Returns',
             line=dict(color='#2ca02c', width=1),
             fill='tozeroy',
             fillcolor='rgba(44, 160, 44, 0.1)'
@@ -176,9 +176,9 @@ def display_single_asset_module(ticker="AAPL"):
         fig_returns.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
         
         fig_returns.update_layout(
-            title=f"Rendements journaliers de l'action {ticker}",
+            title=f"{ticker} Daily Returns",
             xaxis_title="Date",
-            yaxis_title="Rendement (%)",
+            yaxis_title="Return (%)",
             hovermode='x unified',
             height=400,
             showlegend=True
@@ -187,7 +187,7 @@ def display_single_asset_module(ticker="AAPL"):
         st.plotly_chart(fig_returns, use_container_width=True)
         
         # Tableau des dernières données avec rendements
-        st.subheader("Dernières données")
+        st.subheader("Latest Data")
         display_data = data.tail(10)[['Open', 'High', 'Low', 'Close', 'Volume', 'return']].copy()
         display_data['return'] = display_data['return'] * 100  # Convertir en pourcentage
         st.dataframe(
@@ -203,7 +203,7 @@ def display_single_asset_module(ticker="AAPL"):
         )
         
     else:
-        st.warning("Aucune donnée disponible pour le moment.")
+        st.warning("No data available at the moment.")
     
     # Message sur le rafraîchissement automatique
-    st.info("Les données se mettent à jour automatiquement toutes les 5 minutes")
+    st.info("Data updates automatically every 5 minutes")
