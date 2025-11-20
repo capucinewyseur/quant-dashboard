@@ -59,6 +59,7 @@ The dashboard will be available at `http://localhost:8501` in your web browser.
 - **Strategy Selection**: Choose between Buy & Hold, RSI Strategy, or Momentum Strategy
 - **Interactive Charts**: View price data, RSI, strategy positions, and equity curves
 - **Performance Metrics**: View Sharpe Ratio, Max Drawdown, Annualized Volatility, CAGR, and Total Return
+- **Price Prediction (Bonus)**: Simple Linear Regression model to forecast future prices with confidence intervals
 - **Auto-refresh**: Data updates automatically every 5 minutes
 
 ## Project Structure
@@ -71,6 +72,7 @@ quant-dashboard/
 │   ├── indicators.py          # Technical indicators (RSI, MACD, SMA)
 │   ├── strategies.py          # Trading strategies
 │   ├── backtesting.py         # Backtesting engine and metrics
+│   ├── prediction.py          # Price prediction model (Linear Regression)
 │   ├── single_asset.py        # Single asset analysis module
 │   └── portfolio.py           # Portfolio analysis module
 ├── cron/
@@ -93,6 +95,20 @@ quant-dashboard/
 4. Select a trading strategy
 5. Adjust strategy parameters using the sliders
 6. View the results in the dashboard
+
+### Price Prediction Feature (Bonus)
+
+The dashboard includes a simple predictive model using **Linear Regression** to forecast future prices:
+
+- **Model**: Simple Linear Regression (y = a*x + b)
+- **Forecast Period**: 30 days ahead
+- **Confidence Interval**: ±2 standard deviations (95% confidence)
+- **Display**: 
+  - Integrated in the main chart (orange dashed line with shaded confidence band)
+  - Separate dedicated prediction chart below the main chart
+  - Prediction summary metrics (predicted price, expected change, confidence range)
+
+The prediction model uses historical price data to fit a linear trend and extrapolates it into the future. Note that this is a simple model for demonstration purposes and should not be used for actual trading decisions.
 
 ### Running Daily Reports Manually
 

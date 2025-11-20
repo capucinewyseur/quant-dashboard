@@ -211,6 +211,92 @@ if page == "Single Asset":
         )
         
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Bonus: Separate prediction chart
+        if not predictions.empty:
+            st.markdown("---")
+            st.subheader("Price Prediction - 30 Days Forecast")
+            st.caption(f"Simple Linear Regression Model | Asset: {ticker}")
+            
+            fig_pred = go.Figure()
+            
+            # Historical prices (last 60 days for context)
+            recent_df = df.tail(60)
+            fig_pred.add_trace(go.Scatter(
+                x=recent_df.index,
+                y=recent_df["Close"],
+                mode='lines',
+                name=f'Historical Price - {ticker}',
+                line=dict(color='#1f77b4', width=2),
+                hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'
+            ))
+            
+            # Prediction line
+            fig_pred.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions['Predicted_Price'],
+                mode='lines',
+                name='Predicted Price',
+                line=dict(color='#ff7f0e', width=3, dash='dash'),
+                hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Predicted: $%{y:.2f}<extra></extra>'
+            ))
+            
+            # Confidence interval upper
+            fig_pred.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions['Upper_Bound'],
+                mode='lines',
+                name='Upper Bound',
+                line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+            
+            # Confidence interval lower (filled)
+            fig_pred.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions['Lower_Bound'],
+                mode='lines',
+                name='Confidence Interval (95%)',
+                fill='tonexty',
+                fillcolor='rgba(255, 127, 14, 0.15)',
+                line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
+                hovertemplate='<b>Confidence Interval</b><br>Date: %{x}<br>Lower: $%{y:.2f}<extra></extra>'
+            ))
+            
+            # Vertical line to separate historical from prediction
+            last_historical_date = recent_df.index[-1]
+            fig_pred.add_vline(
+                x=last_historical_date,
+                line_dash="dot",
+                line_color="gray",
+                annotation_text="Today",
+                annotation_position="top"
+            )
+            
+            fig_pred.update_layout(
+                title=f"{ticker} Price Prediction - Linear Regression Model",
+                xaxis_title="Date",
+                yaxis_title="Price (USD)",
+                hovermode='x unified',
+                height=400,
+                showlegend=True
+            )
+            
+            st.plotly_chart(fig_pred, use_container_width=True)
+            
+            # Display prediction summary
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Predicted Price (30 days)", f"${predictions['Predicted_Price'].iloc[-1]:.2f}")
+            with col2:
+                current_price = float(df["Close"].iloc[-1])
+                predicted_price = float(predictions['Predicted_Price'].iloc[-1])
+                change_pct = ((predicted_price - current_price) / current_price) * 100
+                st.metric("Expected Change (30d)", f"{change_pct:.2f}%")
+            with col3:
+                confidence_range = float(predictions['Upper_Bound'].iloc[-1] - predictions['Lower_Bound'].iloc[-1])
+                st.metric("Confidence Range", f"${confidence_range:.2f}")
     
     st.subheader(f"{ticker} Price")
     st.line_chart(df["Close"])
