@@ -3,6 +3,7 @@ import numpy as np
 from streamlit_autorefresh import st_autorefresh
 from modules.data import load_asset
 from modules.indicators import add_rsi, add_macd, add_sma
+from modules.strategies import buy_and_hold, rsi_strategy, momentum_strategy
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
