@@ -55,15 +55,22 @@ if page == "Single Asset":
         strat_df = momentum_strategy(df, period=momentum_period)
     
     # Backtesting : calculer les retours de la stratégie
-    if 'strat_df' in locals() and 'return' in strat_df.columns:
-        strat_df = apply_strategy_returns(strat_df, return_col="return", position_col="Position")
-        strat_df = build_equity_curves(strat_df, asset_return_col="return", strat_return_col="StrategyReturn")
+    if 'strat_df' in locals():
+        # S'assurer que la colonne return existe et est propre
+        if 'return' not in strat_df.columns:
+            strat_df["return"] = strat_df["Close"].pct_change()
+        strat_df = strat_df.dropna(subset=['return', 'Position'])
         
-        # Calcul des métriques de performance
-        strat_ret = strat_df["StrategyReturn"].dropna()
-        if len(strat_ret) > 0:
-            vol_annual = compute_volatility(strat_ret, periods_per_year=252)
-            sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=252, risk_free_rate=0.0)
+        if len(strat_df) > 0 and 'return' in strat_df.columns and 'Position' in strat_df.columns:
+            strat_df = apply_strategy_returns(strat_df, return_col="return", position_col="Position")
+            strat_df = build_equity_curves(strat_df, asset_return_col="return", strat_return_col="StrategyReturn")
+            
+            # Calcul des métriques de performance
+            if "StrategyReturn" in strat_df.columns:
+                strat_ret = strat_df["StrategyReturn"].dropna()
+                if len(strat_ret) > 0:
+                    vol_annual = compute_volatility(strat_ret, periods_per_year=252)
+                    sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=252, risk_free_rate=0.0)
     
     st.subheader(f"Prix de {ticker}")
     st.line_chart(df["Close"])
