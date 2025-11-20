@@ -125,6 +125,9 @@ if page == "Single Asset":
         st.subheader(f"Main Chart - Raw Asset Price vs Cumulative Strategy Value")
         st.caption(f"Asset: {ticker} | Strategy: {strategy_name}")
         
+        # Step 3: Calculate predictions
+        predictions = predict_future_prices_simple(df, days_ahead=30, price_col="Close")
+        
         fig = go.Figure()
         
         # Courbe 1 : Prix brut de l'actif (OBLIGATOIRE - axe Y gauche)
@@ -137,6 +140,19 @@ if page == "Single Asset":
             yaxis='y',
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'
         ))
+        
+        # Step 3: Add predictions if available
+        if not predictions.empty:
+            # Prediction line
+            fig.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions['Predicted_Price'],
+                mode='lines',
+                name='Predicted Price (30 days)',
+                line=dict(color='#ff7f0e', width=2, dash='dash'),
+                yaxis='y',
+                hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Predicted: $%{y:.2f}<extra></extra>'
+            ))
         
         # Courbe 2 : Valeur cumulée de la stratégie (OBLIGATOIRE - axe Y droit)
         fig.add_trace(go.Scatter(
