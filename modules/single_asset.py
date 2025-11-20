@@ -52,7 +52,7 @@ def display_single_asset_module(ticker="AAPL"):
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("Dernière mise à jour", datetime.now().strftime("%H:%M:%S"))
+        st.metric("Last Update", datetime.now().strftime("%H:%M:%S"))
     
     # Récupération du prix actuel
     try:
