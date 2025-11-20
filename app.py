@@ -143,7 +143,7 @@ if page == "Single Asset":
         
         # Affichage des equity curves
         if "Equity_Asset" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
-            st.subheader("Equity Curves - Comparaison stratégie vs Buy & Hold")
+            st.subheader("Equity Curves - Strategy vs Buy & Hold Comparison")
             st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
             
             # Affichage des métriques de performance
