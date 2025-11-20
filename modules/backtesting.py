@@ -131,3 +131,38 @@ def compute_sharpe_ratio(returns: pd.Series,
     sharpe = (mean_excess / std_excess) * np.sqrt(periods_per_year)
     return float(sharpe)
 
+def compute_drawdown(equity_curve: pd.Series) -> pd.Series:
+    """
+    Calcule la série de drawdown à partir d'une equity curve.
+
+    Parameters
+    ----------
+    equity_curve : pd.Series
+        Série de valeurs cumulées (equity curve).
+
+    Returns
+    -------
+    pd.Series
+        Série de drawdown (valeurs entre 0 et négatives).
+    """
+    running_max = equity_curve.cummax()
+    drawdown = equity_curve / running_max - 1.0
+    return drawdown
+
+def compute_max_drawdown(equity_curve: pd.Series) -> float:
+    """
+    Calcule le max drawdown (valeur la plus basse de la série de drawdown).
+
+    Parameters
+    ----------
+    equity_curve : pd.Series
+        Série de valeurs cumulées (equity curve).
+
+    Returns
+    -------
+    float
+        Max drawdown (négatif).
+    """
+    drawdown = compute_drawdown(equity_curve)
+    return float(drawdown.min())
+
