@@ -4,7 +4,7 @@ from streamlit_autorefresh import st_autorefresh
 from modules.data import load_asset
 from modules.indicators import add_rsi, add_macd, add_sma
 from modules.strategies import buy_and_hold, rsi_strategy, momentum_strategy
-from modules.backtesting import apply_strategy_returns, build_equity_curves, compute_volatility, compute_sharpe_ratio
+from modules.backtesting import apply_strategy_returns, build_equity_curves, compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
@@ -70,11 +70,15 @@ if page == "Single Asset":
             strat_df = build_equity_curves(strat_df, asset_return_col="return", strat_return_col="StrategyReturn")
             
             # Calcul des métriques de performance
-            if "StrategyReturn" in strat_df.columns:
+            if "StrategyReturn" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
                 strat_ret = strat_df["StrategyReturn"].dropna()
-                if len(strat_ret) > 0:
+                equity_strat = strat_df["Equity_Strategy"].dropna()
+                
+                if len(strat_ret) > 0 and len(equity_strat) > 0:
                     vol_annual = compute_volatility(strat_ret, periods_per_year=252)
                     sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=252, risk_free_rate=0.0)
+                    max_dd = compute_max_drawdown(equity_strat)
+                    cagr = compute_cagr(equity_strat, periods_per_year=252)
     
     st.subheader(f"Prix de {ticker}")
     st.line_chart(df["Close"])
@@ -93,14 +97,24 @@ if page == "Single Asset":
             st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
             
             # Affichage des métriques de performance
-            if 'vol_annual' in locals() and 'sharpe' in locals():
+            if 'vol_annual' in locals() and 'sharpe' in locals() and 'max_dd' in locals() and 'cagr' in locals():
                 st.subheader("Métriques de performance de la stratégie")
-                col1, col2 = st.columns(2)
+                col1, col2, col3, col4 = st.columns(4)
+                
                 with col1:
                     st.metric("Volatilité annualisée", f"{vol_annual:.2%}")
+                
                 with col2:
                     sharpe_display = f"{sharpe:.2f}" if not np.isnan(sharpe) else "N/A"
                     st.metric("Ratio de Sharpe", sharpe_display)
+                
+                with col3:
+                    max_dd_display = f"{max_dd:.2%}" if not np.isnan(max_dd) else "N/A"
+                    st.metric("Max Drawdown", max_dd_display)
+                
+                with col4:
+                    cagr_display = f"{cagr:.2%}" if not np.isnan(cagr) else "N/A"
+                    st.metric("CAGR", cagr_display)
     
     # Bloc KPIs
     st.markdown("---")
