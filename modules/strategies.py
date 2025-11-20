@@ -41,8 +41,7 @@ def rsi_strategy(df, low=30, high=70):
     df.loc[df["RSI"] < low, "Position"] = 1.0
     df.loc[df["RSI"] > high, "Position"] = 0.0
     
-    # Forward fill pour garder la dernière position entre les seuils
-    # On remplace les 0.0 par la dernière valeur non-nulle (forward fill)
+    # Forward fill to maintain last position between thresholds
     mask = (df["RSI"] >= low) & (df["RSI"] <= high)
     df.loc[mask, "Position"] = pd.NA
     df["Position"] = df["Position"].ffill().fillna(0.0)
@@ -68,7 +67,7 @@ def momentum_strategy(df, period=12):
     """
     df = df.copy()
     
-    # Momentum simple : différence de prix sur n périodes
+    # Simple momentum: price difference over n periods
     df["Momentum"] = df["Close"] - df["Close"].shift(period)
     
     df["Position"] = 0.0

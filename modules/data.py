@@ -16,14 +16,14 @@ def load_asset(ticker, start="2018-01-01", end=None, interval="1d"):
     """
     df = yf.download(ticker, start=start, end=end, interval=interval)
     
-    # Si MultiIndex, aplatir les colonnes
+    # Flatten MultiIndex columns if present
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.droplevel(1)
     
     df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
     df.dropna(inplace=True)
     
-    # Rendements journaliers
+    # Daily returns
     df["return"] = df["Close"].pct_change()
     
     return df

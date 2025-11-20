@@ -13,13 +13,13 @@ from modules.prediction import predict_future_prices_simple
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
-# Configuration de la page
+# Page configuration
 st.set_page_config(
     page_title="Quant Dashboard",
     layout="wide"
 )
 
-# Rafraîchissement automatique toutes les 5 minutes (300000 millisecondes)
+# Auto-refresh every 5 minutes (300000 milliseconds)
 st_autorefresh(interval=5 * 60 * 1000, key="data_refresh")
 
 st.title("Quant Dashboard - Python, Git, Linux Project for Finance")
@@ -30,14 +30,14 @@ st.sidebar.markdown("---")
 page = st.sidebar.radio("Module", ["Single Asset", "Portfolio"])
 st.sidebar.markdown("---")
 
-# Sélection du ticker dans la sidebar
+# Asset selection in sidebar
 st.sidebar.subheader("Asset Selection")
 ticker_options = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "JPM", "V", "JNJ"]
 ticker_selected = st.sidebar.selectbox("Select Ticker", ticker_options, index=0)
 ticker_custom = st.sidebar.text_input("Or enter custom ticker", "")
 ticker = ticker_custom if ticker_custom else ticker_selected
 
-# Sélection de la périodicité
+# Periodicity selection
 st.sidebar.markdown("---")
 periodicity = st.sidebar.selectbox(
     "Periodicity",
@@ -45,7 +45,7 @@ periodicity = st.sidebar.selectbox(
     index=0
 )
 
-# Mapping périodicité vers interval
+# Map periodicity to interval
 periodicity_map = {
     "Daily": "1d",
     "Weekly": "1wk",
@@ -116,21 +116,19 @@ if page == "Single Asset":
                 cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
                 total_return = compute_total_return(equity_strat)
     
-    # Graphique principal : Prix brut + Valeur cumulée de la stratégie (OBLIGATOIRE)
-    # Ce graphique doit afficher 2 courbes :
-    # 1. Prix brut de l'actif (axe Y gauche)
-    # 2. Valeur cumulée de la stratégie (axe Y droit)
+    # Main chart: raw asset price and cumulative strategy value
+    # Displays two curves: raw price (left Y-axis) and strategy equity (right Y-axis)
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
         st.markdown("---")
         st.subheader(f"Main Chart - Raw Asset Price vs Cumulative Strategy Value")
         st.caption(f"Asset: {ticker} | Strategy: {strategy_name}")
         
-        # Step 3: Calculate predictions
+        # Calculate price predictions
         predictions = predict_future_prices_simple(df, days_ahead=30, price_col="Close")
         
         fig = go.Figure()
         
-        # Courbe 1 : Prix brut de l'actif (OBLIGATOIRE - axe Y gauche)
+        # Raw asset price (left Y-axis)
         fig.add_trace(go.Scatter(
             x=df.index,
             y=df["Close"],
@@ -141,9 +139,9 @@ if page == "Single Asset":
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'
         ))
         
-        # Step 3: Add predictions if available
+        # Add predictions if available
         if not predictions.empty:
-            # Step 4: Add confidence interval (upper bound)
+            # Confidence interval upper bound
             fig.add_trace(go.Scatter(
                 x=predictions.index,
                 y=predictions['Upper_Bound'],
@@ -155,7 +153,7 @@ if page == "Single Asset":
                 hoverinfo='skip'
             ))
             
-            # Step 4: Add confidence interval (lower bound with fill)
+            # Confidence interval lower bound with fill
             fig.add_trace(go.Scatter(
                 x=predictions.index,
                 y=predictions['Lower_Bound'],
@@ -179,7 +177,7 @@ if page == "Single Asset":
                 hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Predicted: $%{y:.2f}<extra></extra>'
             ))
         
-        # Courbe 2 : Valeur cumulée de la stratégie (OBLIGATOIRE - axe Y droit)
+        # Cumulative strategy value (right Y-axis)
         fig.add_trace(go.Scatter(
             x=strat_df.index,
             y=strat_df["Equity_Strategy"],
@@ -190,7 +188,7 @@ if page == "Single Asset":
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Cumulative Value: %{y:.4f}<extra></extra>'
         ))
         
-        # Configuration avec deux axes Y
+        # Chart configuration with dual Y-axes
         fig.update_layout(
             title=f"Raw Price vs Strategy Performance ({strategy_name})",
             xaxis_title="Date",
@@ -264,8 +262,7 @@ if page == "Single Asset":
                 hovertemplate='<b>Confidence Interval</b><br>Date: %{x}<br>Lower: $%{y:.2f}<extra></extra>'
             ))
             
-            # Note: Historical data ends at the last date, predictions start from the next day
-            # The separation is visually clear from the different line styles
+            # Historical data ends at last date, predictions start from next day
             
             fig_pred.update_layout(
                 title=f"{ticker} Price Prediction - Linear Regression Model",
@@ -343,7 +340,7 @@ if page == "Single Asset":
     col2.metric("Daily Return", f"{daily_ret:.2%}")
     col3.metric("20d Annualized Vol", f"{vol_20d:.2%}")
     
-    # Afficher aussi le module détaillé avec le ticker sélectionné
+    # Display detailed single asset module
     display_single_asset_module(ticker)
 else:
     display_portfolio_module()
