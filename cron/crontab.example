@@ -1,0 +1,24 @@
+# Cron job configuration for Quant Dashboard Daily Reports
+# 
+# This file shows how to configure a cron job to run the daily report generator
+# at 8:00 PM (20:00) every day.
+#
+# To install this cron job:
+# 1. Edit this file and adjust the path to your project directory
+# 2. Run: crontab -e
+# 3. Add the following line (adjust the path to your project):
+#
+# 0 20 * * * cd /path/to/quant-dashboard && /path/to/venv/bin/python cron/generate_report.py >> cron/cron.log 2>&1
+#
+# Or if using the system Python:
+# 0 20 * * * cd /path/to/quant-dashboard && python3 cron/generate_report.py >> cron/cron.log 2>&1
+#
+# To verify the cron job is installed:
+# crontab -l
+#
+# To view cron logs:
+# tail -f cron/cron.log
+
+# Example cron entry (uncomment and adjust paths):
+# 0 20 * * * cd /home/user/quant-dashboard && /home/user/quant-dashboard/venv/bin/python cron/generate_report.py >> cron/cron.log 2>&1
+
