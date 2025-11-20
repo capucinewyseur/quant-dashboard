@@ -1,6 +1,30 @@
 import pandas as pd
 import numpy as np
 
+def compute_returns(df, price_col="Close", return_col="return"):
+    """
+    Compute returns from a price DataFrame.
+    
+    This is the main function to calculate asset returns for backtesting.
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Must contain a price column (Close by default)
+    price_col : str
+        Column used to compute returns (default: "Close")
+    return_col : str
+        Name of the return column to create (default: "return")
+    
+    Returns
+    -------
+    pd.DataFrame
+        Original df + a new return column
+    """
+    df = df.copy()
+    df[return_col] = df[price_col].pct_change()
+    return df
+
 def compute_daily_returns(df, price_col="Close"):
     """
     Compute daily returns from a price DataFrame.
@@ -20,6 +44,33 @@ def compute_daily_returns(df, price_col="Close"):
     df = df.copy()
     df["Return"] = df[price_col].pct_change()
     df.dropna(inplace=True)  # first line becomes NaN → drop
+    return df
+
+def apply_strategy_position(df, return_col="return", position_col="Position", out_col="StrategyReturn"):
+    """
+    Apply strategy position to asset returns to get strategy returns.
+    
+    This function multiplies asset returns by the position (1 = long, 0 = cash, -1 = short)
+    to calculate strategy returns.
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Must contain return_col and position_col columns
+    return_col : str
+        Name of the column containing asset returns (default: "return")
+    position_col : str
+        Name of the column containing strategy position (default: "Position")
+    out_col : str
+        Name of the new strategy returns column (default: "StrategyReturn")
+    
+    Returns
+    -------
+    pd.DataFrame
+        df + out_col column with strategy returns
+    """
+    df = df.copy()
+    df[out_col] = df[return_col] * df[position_col]
     return df
 
 def apply_strategy_returns(df, return_col="Return", position_col="Position", out_col="StrategyReturn"):
@@ -45,6 +96,43 @@ def apply_strategy_returns(df, return_col="Return", position_col="Position", out
     """
     df = df.copy()
     df[out_col] = df[return_col] * df[position_col]
+    return df
+
+def compute_cumulative_returns(df, asset_return_col="return", strat_return_col="StrategyReturn",
+                              asset_equity_col="Equity_Asset", strat_equity_col="Equity_Strategy",
+                              initial_capital=1.0):
+    """
+    Compute cumulative returns (equity curves) for asset and strategy.
+    
+    This function builds cumulative value curves starting from initial_capital.
+    The equity curve shows how $1 invested would have grown over time.
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Must contain asset_return_col and strat_return_col
+    asset_return_col : str
+        Name of the column containing asset returns (default: "return")
+    strat_return_col : str
+        Name of the column containing strategy returns (default: "StrategyReturn")
+    asset_equity_col : str
+        Name of the asset equity curve column to create (default: "Equity_Asset")
+    strat_equity_col : str
+        Name of the strategy equity curve column to create (default: "Equity_Strategy")
+    initial_capital : float
+        Initial capital (default: 1.0)
+    
+    Returns
+    -------
+    pd.DataFrame
+        df + 2 equity curve columns (cumulative values)
+    """
+    df = df.copy()
+    
+    # Cumulative product: (1 + r1) * (1 + r2) * ... * (1 + rn)
+    df[asset_equity_col] = initial_capital * (1 + df[asset_return_col]).cumprod()
+    df[strat_equity_col] = initial_capital * (1 + df[strat_return_col]).cumprod()
+    
     return df
 
 def build_equity_curves(df, asset_return_col="Return", strat_return_col="StrategyReturn",
@@ -196,4 +284,57 @@ def compute_cagr(equity_curve: pd.Series, periods_per_year: int = 252) -> float:
     
     cagr = (final_value / initial_value) ** (1 / n_years) - 1
     return float(cagr)
+
+def backtest_complete(df, position_col="Position", price_col="Close", 
+                     return_col="return", initial_capital=1.0):
+    """
+    Complete backtesting pipeline: compute returns, apply strategy, build equity curves.
+    
+    This is the main orchestration function that runs the complete backtesting process:
+    1. Compute asset returns
+    2. Apply strategy positions to get strategy returns
+    3. Build cumulative equity curves
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame with price data and Position column from strategy
+    position_col : str
+        Name of the position column (default: "Position")
+    price_col : str
+        Name of the price column (default: "Close")
+    return_col : str
+        Name of the return column to create (default: "return")
+    initial_capital : float
+        Initial capital for equity curves (default: 1.0)
+    
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with returns, strategy returns, and equity curves
+    """
+    df = df.copy()
+    
+    # Step 1: Compute asset returns
+    if return_col not in df.columns:
+        df = compute_returns(df, price_col=price_col, return_col=return_col)
+    
+    # Drop NaN values (first row will be NaN for returns)
+    df = df.dropna()
+    
+    # Step 2: Apply strategy position to get strategy returns
+    if position_col in df.columns and return_col in df.columns:
+        df = apply_strategy_position(df, return_col=return_col, 
+                                    position_col=position_col, 
+                                    out_col="StrategyReturn")
+        
+        # Step 3: Build cumulative equity curves
+        df = compute_cumulative_returns(df, 
+                                        asset_return_col=return_col,
+                                        strat_return_col="StrategyReturn",
+                                        asset_equity_col="Equity_Asset",
+                                        strat_equity_col="Equity_Strategy",
+                                        initial_capital=initial_capital)
+    
+    return df
 

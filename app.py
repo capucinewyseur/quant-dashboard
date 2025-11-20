@@ -5,7 +5,10 @@ from streamlit_autorefresh import st_autorefresh
 from modules.data import load_asset
 from modules.indicators import add_rsi, add_macd, add_sma
 from modules.strategies import buy_and_hold, rsi_strategy, momentum_strategy
-from modules.backtesting import apply_strategy_returns, build_equity_curves, compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr
+from modules.backtesting import (apply_strategy_returns, build_equity_curves, 
+                                 compute_returns, apply_strategy_position, compute_cumulative_returns,
+                                 backtest_complete,
+                                 compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr)
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
@@ -77,64 +80,65 @@ if page == "Single Asset":
         momentum_period = st.sidebar.slider("Momentum period", 5, 50, 12)
         strat_df = momentum_strategy(df, period=momentum_period)
     
-    # Backtesting : calculer les retours de la stratégie
+    # Backtesting complet : calculer les retours, appliquer la stratégie, construire les courbes
     if 'strat_df' in locals():
-        # S'assurer que la colonne return existe
-        if 'return' not in strat_df.columns:
-            strat_df["return"] = strat_df["Close"].pct_change()
+        # Utiliser la fonction complète de backtesting
+        strat_df = backtest_complete(strat_df, 
+                                     position_col="Position",
+                                     price_col="Close",
+                                     return_col="return",
+                                     initial_capital=1.0)
         
-        # Nettoyer les NaN - utiliser dropna() sans subset pour éviter les erreurs
-        # On nettoie toutes les colonnes NaN, puis on vérifie que return et Position existent
-        strat_df = strat_df.dropna()
-        
-        # Vérifier que les colonnes nécessaires existent après nettoyage
-        if len(strat_df) > 0 and 'return' in strat_df.columns and 'Position' in strat_df.columns:
-            strat_df = apply_strategy_returns(strat_df, return_col="return", position_col="Position")
-            strat_df = build_equity_curves(strat_df, asset_return_col="return", strat_return_col="StrategyReturn")
+        # Calcul des métriques de performance
+        if "StrategyReturn" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
+            strat_ret = strat_df["StrategyReturn"].dropna()
+            equity_strat = strat_df["Equity_Strategy"].dropna()
             
-            # Calcul des métriques de performance
-            if "StrategyReturn" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
-                strat_ret = strat_df["StrategyReturn"].dropna()
-                equity_strat = strat_df["Equity_Strategy"].dropna()
+            if len(strat_ret) > 0 and len(equity_strat) > 0:
+                # Déterminer periods_per_year selon la périodicité
+                periods_map = {
+                    "Daily": 252,
+                    "Weekly": 52,
+                    "Monthly": 12
+                }
+                periods_per_year = periods_map.get(periodicity, 252)
                 
-                if len(strat_ret) > 0 and len(equity_strat) > 0:
-                    # Déterminer periods_per_year selon la périodicité
-                    periods_map = {
-                        "Daily": 252,
-                        "Weekly": 52,
-                        "Monthly": 12
-                    }
-                    periods_per_year = periods_map.get(periodicity, 252)
-                    
-                    vol_annual = compute_volatility(strat_ret, periods_per_year=periods_per_year)
-                    sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=periods_per_year, risk_free_rate=0.0)
-                    max_dd = compute_max_drawdown(equity_strat)
-                    cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
+                vol_annual = compute_volatility(strat_ret, periods_per_year=periods_per_year)
+                sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=periods_per_year, risk_free_rate=0.0)
+                max_dd = compute_max_drawdown(equity_strat)
+                cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
     
-    # Graphique principal : Prix brut + Valeur cumulée de la stratégie
+    # Graphique principal : Prix brut + Valeur cumulée de la stratégie (OBLIGATOIRE)
+    # Ce graphique doit afficher 2 courbes :
+    # 1. Prix brut de l'actif (axe Y gauche)
+    # 2. Valeur cumulée de la stratégie (axe Y droit)
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
-        st.subheader(f"Main Chart - {ticker} Price vs Strategy Performance ({strategy_name})")
+        st.markdown("---")
+        st.subheader(f"📊 Main Chart - Raw Asset Price vs Cumulative Strategy Value")
+        st.caption(f"Asset: {ticker} | Strategy: {strategy_name}")
         
         fig = go.Figure()
         
-        # Courbe 1 : Prix brut de l'actif (axe Y gauche)
+        # Courbe 1 : Prix brut de l'actif (OBLIGATOIRE - axe Y gauche)
         fig.add_trace(go.Scatter(
             x=df.index,
             y=df["Close"],
             mode='lines',
-            name=f'{ticker} Price',
-            line=dict(color='#1f77b4', width=2),
-            yaxis='y'
+            name=f'Raw Price - {ticker}',
+            line=dict(color='#1f77b4', width=3),
+            yaxis='y',
+            hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'
         ))
         
-        # Courbe 2 : Valeur cumulée de la stratégie (axe Y droit)
+        # Courbe 2 : Valeur cumulée de la stratégie (OBLIGATOIRE - axe Y droit)
         fig.add_trace(go.Scatter(
             x=strat_df.index,
             y=strat_df["Equity_Strategy"],
             mode='lines',
-            name=f'Equity {strategy_name}',
-            line=dict(color='#2ca02c', width=2),
-            yaxis='y2'
+            name=f'Cumulative Strategy Value - {strategy_name}',
+            line=dict(color='#2ca02c', width=3),
+            yaxis='y2',
+            hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Cumulative Value: %{y:.4f}<extra></extra>'
         ))
         
         # Configuration avec deux axes Y
