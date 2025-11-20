@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 from streamlit_autorefresh import st_autorefresh
 from modules.data import load_asset
+from modules.indicators import add_rsi, add_macd, add_sma
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
@@ -25,6 +26,12 @@ ticker = st.sidebar.text_input("Ticker", "AAPL")
 if page == "Single Asset":
     # Chargement des données avec le ticker sélectionné
     df = load_asset(ticker)
+    
+    # Ajout des indicateurs techniques
+    rsi_window = st.sidebar.slider("RSI window", 5, 30, 14)
+    df = add_rsi(df, window=rsi_window)
+    df = add_macd(df)
+    df = add_sma(df, window=20)
     
     st.subheader(f"Prix de {ticker}")
     st.line_chart(df["Close"])
