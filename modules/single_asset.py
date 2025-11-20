@@ -108,7 +108,7 @@ def display_single_asset_module(ticker="AAPL"):
             st.metric("Recent Low", f"${low_24h:.2f}")
         
         # KPIs sur les rendements
-        st.subheader("KPIs sur les rendements")
+        st.subheader("Returns KPIs")
         
         # Calcul des KPIs
         returns = data['return'].dropna()
