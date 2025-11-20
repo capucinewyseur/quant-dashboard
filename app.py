@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
 from modules.data import load_asset
 from modules.indicators import add_rsi, add_macd, add_sma
@@ -79,6 +80,56 @@ if page == "Single Asset":
                     sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=252, risk_free_rate=0.0)
                     max_dd = compute_max_drawdown(equity_strat)
                     cagr = compute_cagr(equity_strat, periods_per_year=252)
+    
+    # Graphique principal : Prix brut + Valeur cumulée de la stratégie
+    if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
+        st.subheader(f"Graphique principal - Prix {ticker} vs Performance stratégie ({strategy_name})")
+        
+        fig = go.Figure()
+        
+        # Courbe 1 : Prix brut de l'actif (axe Y gauche)
+        fig.add_trace(go.Scatter(
+            x=df.index,
+            y=df["Close"],
+            mode='lines',
+            name=f'Prix {ticker}',
+            line=dict(color='#1f77b4', width=2),
+            yaxis='y'
+        ))
+        
+        # Courbe 2 : Valeur cumulée de la stratégie (axe Y droit)
+        fig.add_trace(go.Scatter(
+            x=strat_df.index,
+            y=strat_df["Equity_Strategy"],
+            mode='lines',
+            name=f'Equity {strategy_name}',
+            line=dict(color='#2ca02c', width=2),
+            yaxis='y2'
+        ))
+        
+        # Configuration avec deux axes Y
+        fig.update_layout(
+            title=f"Prix brut vs Performance stratégie ({strategy_name})",
+            xaxis_title="Date",
+            yaxis=dict(
+                title="Prix (USD)",
+                titlefont=dict(color='#1f77b4'),
+                tickfont=dict(color='#1f77b4')
+            ),
+            yaxis2=dict(
+                title="Valeur cumulée (Equity)",
+                titlefont=dict(color='#2ca02c'),
+                tickfont=dict(color='#2ca02c'),
+                anchor='x',
+                overlaying='y',
+                side='right'
+            ),
+            hovermode='x unified',
+            height=500,
+            showlegend=True
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
     
     st.subheader(f"Prix de {ticker}")
     st.line_chart(df["Close"])
