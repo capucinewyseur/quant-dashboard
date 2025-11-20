@@ -130,7 +130,7 @@ if page == "Single Asset":
         
         st.plotly_chart(fig, use_container_width=True)
     
-    st.subheader(f"Prix de {ticker}")
+    st.subheader(f"{ticker} Price")
     st.line_chart(df["Close"])
     
     st.subheader("RSI")
