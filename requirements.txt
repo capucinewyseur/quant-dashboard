@@ -4,6 +4,8 @@ numpy
 matplotlib
 yfinance
 requests
+plotly
+streamlit-autorefresh
 
 
 
