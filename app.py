@@ -173,7 +173,7 @@ if page == "Single Asset":
                 x=predictions.index,
                 y=predictions['Predicted_Price'],
                 mode='lines',
-                name='Predicted Price (30 days)',
+                name='Predicted Price (30 days) - Simple Linear Regression',
                 line=dict(color='#ff7f0e', width=2, dash='dash'),
                 yaxis='y',
                 hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Predicted: $%{y:.2f}<extra></extra>'
@@ -236,7 +236,7 @@ if page == "Single Asset":
                 x=predictions.index,
                 y=predictions['Predicted_Price'],
                 mode='lines',
-                name='Predicted Price',
+                name='Predicted Price - Simple Linear Regression',
                 line=dict(color='#ff7f0e', width=3, dash='dash'),
                 hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Predicted: $%{y:.2f}<extra></extra>'
             ))
