@@ -112,14 +112,12 @@ if page == "Single Asset":
             title=f"Prix brut vs Performance stratégie ({strategy_name})",
             xaxis_title="Date",
             yaxis=dict(
-                title="Prix (USD)",
-                titlefont_color='#1f77b4',
-                tickfont_color='#1f77b4'
+                title=dict(text="Prix (USD)", font=dict(color='#1f77b4')),
+                tickfont=dict(color='#1f77b4')
             ),
             yaxis2=dict(
-                title="Valeur cumulée (Equity)",
-                titlefont_color='#2ca02c',
-                tickfont_color='#2ca02c',
+                title=dict(text="Valeur cumulée (Equity)", font=dict(color='#2ca02c')),
+                tickfont=dict(color='#2ca02c'),
                 anchor='x',
                 overlaying='y',
                 side='right'
