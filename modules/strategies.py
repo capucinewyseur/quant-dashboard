@@ -38,6 +38,8 @@ def rsi_strategy(df, low=30, high=70):
     df["Position"] = 0.0
     df.loc[df["RSI"] < low, "Position"] = 1.0
     df.loc[df["RSI"] > high, "Position"] = 0.0
+    # Forward fill pour garder la dernière position entre les seuils
+    df["Position"] = df["Position"].replace(0.0, method='ffill').fillna(0.0)
     return df
 
 def momentum_strategy(df, period=12):
