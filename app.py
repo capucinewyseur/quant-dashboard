@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
@@ -184,7 +185,15 @@ if page == "Single Asset":
         # Affichage des equity curves
         if "Equity_Asset" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
             st.subheader("Equity Curves - Strategy vs Buy & Hold Comparison")
-            st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
+
+            # Fix MultiIndex → aplatir les colonnes uniquement pour l'affichage
+            if isinstance(strat_df.columns, pd.MultiIndex):
+                strat_plot = strat_df.copy()
+                strat_plot.columns = strat_plot.columns.get_level_values(0)
+            else:
+                strat_plot = strat_df
+
+            st.line_chart(strat_plot[["Equity_Asset", "Equity_Strategy"]])
             
             # Affichage des métriques de performance
             if vol_annual is not None and sharpe is not None and max_dd is not None and cagr is not None and total_return is not None:
