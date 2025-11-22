@@ -68,7 +68,7 @@ def compute_portfolio_returns(asset_returns: pd.DataFrame, weights: np.ndarray) 
 
 
 #cumulative value calculation
-def compute_cumulative_value(portfolio_returns: pd.Series, initial_value: float = 100.0) -> pd.Series:
+def compute_cumulated_values(portfolio_returns: pd.Series, initial_value: float = 100.0) -> pd.Series:
     """
     Compute the cumulative value curve of an investment given the returns.
 
@@ -84,49 +84,58 @@ def compute_cumulative_value(portfolio_returns: pd.Series, initial_value: float 
     return cumulative_value
 
 # Drawdown calculation
-def compute_drawdowns(series: pd.Series) -> float:
+def max_drawdown(series: pd.Series) -> float:
     """
-    Compute the maximum drawdown of a cumulative value series.
-
-    Parameters:
-    - series: Series with cumulative values (index = datetime).
-
-    Returns:
-    - Maximum drawdown as a float.
+    Calcule le max drawdown d'une série de valeur cumulée.
     """
     running_max = series.cummax()
-    drawdowns = (series - running_max) / running_max
-    return float(drawdowns.min())
+    drawdown = (series - running_max) / running_max
+    return float(drawdown.min())
+
 
 # metrics
 
-def compute_performance_metrics(portfolio_returns: pd.Series, risk_free_rate: float=0.0, periods_per_year: int=252) -> Dict[str, float]:
+def compute_portfolio_metrics(
+    portfolio_returns: pd.Series,
+    risk_free_rate: float = 0.0,
+    periods_per_year: int = 252,
+) -> Dict[str, float]:
     """
-    Compute performance metrics for the portfolio returns.
+    Calcule les principales métriques du portefeuille.
 
-    Parameters:
-    - portfolio_returns: Series with portfolio returns (index = datetime).
-    - risk_free_rate: Annualized risk-free rate for Sharpe ratio calculation.
-    - periods_per_year: Number of trading periods in a year.
+    Parameters
+    ----------
+    portfolio_returns : Series
+        Rendements du portefeuille (fréquence = daily par défaut).
+    risk_free_rate : float
+        Taux sans risque annualisé (ex: 0.02 pour 2%)
+    periods_per_year : int
+        252 pour daily, 52 pour weekly, 12 pour monthly.
 
-    Returns:
-    - Dictionary with performance metrics: annualized return, annualized volatility, Sharpe ratio, max drawdown.
+    Returns
+    -------
+    dict avec :
+        - annual_return
+        - annual_vol
+        - sharpe
+        - max_drawdown
     """
-    #annualized return
-    meanr.ret = portfolio_returns.mean()
+    mean_ret = portfolio_returns.mean()
     vol = portfolio_returns.std()
 
-    ann_ret = (1 + meanr.ret) ** periods_per_year - 1
+    # rendement annualisé (en partant d'un rendement moyen par période)
+    ann_return = (1 + mean_ret) ** periods_per_year - 1
+    # volatilité annualisée
     ann_vol = vol * np.sqrt(periods_per_year)
 
     if ann_vol > 0:
-        sharpe = (ann_ret - risk_free_rate) / ann_vol
+        sharpe = (ann_return - risk_free_rate) / ann_vol
     else:
         sharpe = np.nan
-    
-    #max drawdown
+
+    # courbe cumulée pour calculer le max drawdown
     cum = (1 + portfolio_returns).cumprod()
-    mdd = compute_drawdowns(cum)
+    mdd = max_drawdown(cum)
 
     return {
         "annual_return": float(ann_return),
@@ -134,6 +143,7 @@ def compute_performance_metrics(portfolio_returns: pd.Series, risk_free_rate: fl
         "sharpe": float(sharpe),
         "max_drawdown": float(mdd),
     }
+
 
 
 # ---------------------------------------------
