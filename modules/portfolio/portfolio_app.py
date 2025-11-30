@@ -2,10 +2,11 @@
 
 from datetime import datetime, date
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import yfinance as yf
 
 from modules.data.multi_asset_loader import (
     load_multi_asset_prices,
@@ -14,11 +15,29 @@ from modules.data.multi_asset_loader import (
 from modules.portfolio.portfolio_logic import (
     compute_returns,
     normalize_weights,
-    compute_portfolio_returns,
+    compute_portfolio_returns_with_rebalancing,
     compute_cumulated_values,
     compute_portfolio_metrics,
     compute_correlation_matrix,
 )
+
+
+def _get_market_caps(tickers: list[str]) -> dict[str, float]:
+    """
+    Fetch market caps from yfinance for the given tickers.
+    If not available (FX, futures...), fallback to 1.0.
+    """
+    caps: dict[str, float] = {}
+    for t in tickers:
+        try:
+            info = yf.Ticker(t).info
+            cap = info.get("marketCap", None)
+            if cap is None or cap <= 0:
+                cap = 1.0
+        except Exception:
+            cap = 1.0
+        caps[t] = float(cap)
+    return caps
 
 
 def run():
@@ -43,8 +62,7 @@ def run():
 
     # 2) Période d'analyse
     today = date.today()
-    # 1 an par défaut
-    default_start = date(today.year - 1, today.month, today.day)
+    default_start = date(today.year - 1, today.month, today.day)  # 1 an par défaut
 
     start_date = st.sidebar.date_input("Start date", default_start)
     end_date = st.sidebar.date_input("End date", today)
@@ -53,41 +71,40 @@ def run():
         st.error("Start date must be before end date.")
         return
 
-    # 3) Mode de poids : equal ou custom
+    # 3) Mode de poids : equal / price / mkt cap / custom
     weights_mode = st.sidebar.radio(
         "Weights mode",
-        ["Equal weight", "Custom"],
+        ["Equal weight", "Price-weighted", "Market-cap weighted", "Custom"],
         index=0,
     )
 
-    raw_weights: dict[str, float] = {}
+    # 4) Rebalancing frequency
+    rebal_label = st.sidebar.selectbox(
+        "Rebalancing frequency",
+        ["No rebalancing (buy & hold)", "Monthly", "Quarterly", "Yearly"],
+        index=0,
+        help="How often the portfolio is rebalanced back to the chosen weights.",
+    )
+    freq_map = {
+        "No rebalancing (buy & hold)": "none",
+        "Monthly": "M",
+        "Quarterly": "Q",
+        "Yearly": "A",
+    }
+    rebal_freq = freq_map[rebal_label]
+
+    # Custom weights sliders (only used if mode == Custom)
+    custom_raw_weights: dict[str, float] = {}
     if weights_mode == "Custom":
         st.sidebar.subheader("Custom weights")
         for t in tickers:
-            raw_weights[t] = st.sidebar.slider(
+            custom_raw_weights[t] = st.sidebar.slider(
                 f"Weight for {t}",
                 min_value=0.0,
                 max_value=1.0,
                 value=1.0 / len(tickers),
                 step=0.01,
             )
-    else:
-        raw_weights = {t: 1.0 for t in tickers}
-
-    # Normalisation des poids (somme = 1)
-    weights = normalize_weights(raw_weights, tickers)
-
-    # ---------- DISPLAY: selected assets + weights ----------
-    st.write("### Selected assets")
-    st.write(", ".join(tickers))
-
-    st.write("**Portfolio weights:**")
-    weights_dict = {t: float(w) for t, w in zip(tickers, weights)}
-    weights_df = (
-        pd.DataFrame.from_dict(weights_dict, orient="index", columns=["Weight"])
-        .rename_axis("Asset")
-    )
-    st.dataframe(weights_df.style.format({"Weight": "{:.2%}"}))
 
     # -----------------------------------------
     # Chargement des prix
@@ -108,10 +125,55 @@ def run():
     st.dataframe(prices.sort_index(ascending=False).head())
 
     # -----------------------------------------
+    # Construction des poids selon le mode choisi
+    # -----------------------------------------
+    raw_weights: dict[str, float] = {}
+
+    if weights_mode == "Equal weight":
+        raw_weights = {t: 1.0 for t in tickers}
+
+    elif weights_mode == "Price-weighted":
+        # Last available price per asset (with forward fill)
+        last_prices = prices.ffill().iloc[-1]
+        for t in tickers:
+            val = last_prices.get(t, np.nan)
+            if pd.isna(val):
+                val = 1.0  # fallback if no data
+            raw_weights[t] = float(val)
+
+    elif weights_mode == "Market-cap weighted":
+        caps = _get_market_caps(tickers)
+        raw_weights = caps
+
+    elif weights_mode == "Custom":
+        raw_weights = custom_raw_weights
+
+    # Normalize weights (sum = 1)
+    weights = normalize_weights(raw_weights, tickers)
+
+    # ---------- DISPLAY: selected assets + weights ----------
+    st.write("### Selected assets")
+    st.write(", ".join(tickers))
+
+    st.write(f"**Portfolio weights ({weights_mode}):**")
+    weights_dict = {t: float(w) for t, w in zip(tickers, weights)}
+    weights_df = (
+        pd.DataFrame.from_dict(weights_dict, orient="index", columns=["Weight"])
+        .rename_axis("Asset")
+    )
+    st.dataframe(weights_df.style.format({"Weight": "{:.2%}"}))
+
+    # -----------------------------------------
     # Returns, portefeuille, métriques
     # -----------------------------------------
     rets = compute_returns(prices, log=False)
-    port_rets = compute_portfolio_returns(rets, weights)
+
+    # Portfolio returns with chosen rebalancing frequency
+    port_rets = compute_portfolio_returns_with_rebalancing(
+        rets,
+        weights,
+        rebal_freq=rebal_freq,
+    )
     port_val = compute_cumulated_values(port_rets, initial_value=100.0)
 
     # -----------------------------------------
@@ -121,15 +183,12 @@ def run():
 
     fig = go.Figure()
 
-    # Normalisation des actifs à 100 au départ (par 1er prix valide)
+    # Normalisation des actifs à 100 (par 1er prix valide)
     for col in prices.columns:
         series = prices[col]
-
         non_na = series.dropna()
         if non_na.empty:
-            # Aucun prix valide pour cet actif sur la période -> on le skip
             continue
-
         first_valid = non_na.iloc[0]
         series_norm = series / first_valid * 100.0
 

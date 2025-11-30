@@ -1,99 +1,100 @@
-from typing import Dict
+# modules/portfolio/portfolio_logic.py
+
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 
-#1 Calculate returns
 
-def compute_returns(prices: pd.DataFrame, log : bool = False) -> pd.DataFrame:
+# --------------------------------------------------
+# Basic helpers
+# --------------------------------------------------
+
+
+def compute_returns(prices: pd.DataFrame, log: bool = False) -> pd.DataFrame:
     """
-    Compute the daily returns of the assets using the prices.
+    Compute daily (or period) returns from price data.
 
-    Parameters:
-    - prices: DataFrame with asset prices (columns = assets, index = datetime).
-    - log: Boolean indicating whether to compute log returns or simple returns.
+    Parameters
+    ----------
+    prices : pd.DataFrame
+        Price data, index = dates, columns = tickers.
+    log : bool
+        If True, compute log-returns, otherwise simple pct change.
 
-    Returns:
-    - DataFrame with daily returns.
+    Returns
+    -------
+    pd.DataFrame
+        Returns aligned with prices.index/prices.columns.
     """
+    prices = prices.sort_index()
     if log:
         rets = np.log(prices / prices.shift(1))
     else:
-        rets = prices.pct_change()
-    
-    return rets.dropna()
+        # pct_change with explicit fill_method=None to avoid FutureWarning
+        rets = prices.pct_change(fill_method=None)
+
+    return rets.fillna(0.0)
 
 
-
-
-# Weight normalization function
-def normalize_weights(raw_weights: Dict[str, float], tickers) -> np.ndarray:
+def normalize_weights(raw_weights: dict[str, float], tickers: list[str]) -> np.ndarray:
     """
-    Normalize a dictionary of asset weights so that they sum to 1.
-
-    Parameters:
-    - raw_weights: Dictionary with asset tickers as keys and their weights as values.
-    - tickers: List of asset tickers to consider.
-
-    Returns:
-    - Dictionary with normalized weights.
+    Convert a dict of raw weights into a normalized numpy vector
+    aligned with tickers.
     """
     w = np.array([raw_weights.get(t, 0.0) for t in tickers], dtype=float)
-    w_sum = np.sum(w)
+    total = np.sum(np.abs(w))
 
-    if w_sum<=0:
-        #fallback to equal weights
-        w = np.ones(len(tickers)) / len(tickers)
-    else:
-        w /= w_sum
-    return w
+    if total <= 0:
+        # Fallback: equal weight
+        n = len(tickers)
+        return np.ones(n, dtype=float) / n
 
-# Portfolio returns calculation
-def compute_portfolio_returns(asset_returns: pd.DataFrame, weights: np.ndarray) -> pd.Series:
+    return w / total
+
+
+def compute_portfolio_returns(rets: pd.DataFrame, weights: np.ndarray) -> pd.Series:
     """
-    Compute the portfolio returns given asset returns and weights.
-    R_port = sum(w_i * R_i)
-
-    Parameters:
-    - asset_returns: DataFrame with asset returns (columns = assets, index = datetime).
-    - weights: Numpy array with asset weights.
-
-    Returns:
-    - Series with portfolio returns.
+    Simple static-weight portfolio: each date uses the same weights.
     """
-    R = asset_returns.values  # shape (T, N)
-    port_rets = R @ weights   # shape (T,)
+    rets_clean = rets.fillna(0.0)
+    w = np.array(weights, dtype=float).reshape(-1, 1)
+    port = rets_clean.values @ w  # (n_dates x n_assets) @ (n_assets x 1)
+    return pd.Series(
+        port.ravel(),
+        index=rets_clean.index,
+        name="Portfolio Returns",
+    )
 
-    return pd.Series(port_rets, index=asset_returns.index, name="Portfolio Returns")
 
-
-
-#cumulative value calculation
-def compute_cumulated_values(portfolio_returns: pd.Series, initial_value: float = 100.0) -> pd.Series:
+def compute_cumulated_values(
+    returns: pd.Series,
+    initial_value: float = 100.0,
+) -> pd.Series:
     """
-    Compute the cumulative value curve of an investment given the returns.
-
-    Parameters:
-    - portfolio_returns: Series with returns (index = datetime).
-    - initial_value: Initial investment value.
-
-    Returns:
-    - Series with cumulative values.
+    Compute cumulative portfolio value starting from initial_value.
     """
-    cumulative_value = initial_value * (1 + portfolio_returns).cumprod()
-    cumulative_value.name = "portfolio_value"
-    return cumulative_value
+    r = returns.fillna(0.0)
+    cum = (1.0 + r).cumprod() * float(initial_value)
+    cum.name = "portfolio_value"
+    return cum
 
-# Drawdown calculation
-def max_drawdown(series: pd.Series) -> float:
+
+def max_drawdown(cum_values: pd.Series) -> float:
     """
-    Calcule le max drawdown d'une série de valeur cumulée.
+    Compute maximum drawdown from a cumulative value series (base 1 or base 100).
+    Returns a negative number (e.g. -0.25 for -25%).
     """
+    series = cum_values.astype(float)
     running_max = series.cummax()
-    drawdown = (series - running_max) / running_max
-    return float(drawdown.min())
+    drawdowns = (series / running_max) - 1.0
+    return float(drawdowns.min())
 
 
-# metrics
+# --------------------------------------------------
+# Portfolio metrics (incl. diversification)
+# --------------------------------------------------
+
 
 def compute_portfolio_metrics(
     portfolio_returns: pd.Series,
@@ -102,9 +103,25 @@ def compute_portfolio_metrics(
     periods_per_year: int = 252,
 ) -> dict:
     """
-    Calcule les métriques principales du portefeuille.
-    """
+    Compute main portfolio metrics.
 
+    Parameters
+    ----------
+    portfolio_returns : pd.Series
+        Portfolio returns.
+    rets : pd.DataFrame, optional
+        Asset returns (columns = tickers). Used for diversification metrics.
+    weights : np.ndarray, optional
+        Portfolio weights aligned with rets.columns.
+    periods_per_year : int
+        E.g. 252 for daily data.
+
+    Returns
+    -------
+    dict with keys:
+        'annual_return', 'annual_vol', 'sharpe', 'max_drawdown',
+        and optionally 'naive_annual_vol', 'diversification_ratio'.
+    """
     pr = portfolio_returns.dropna()
 
     if pr.empty:
@@ -115,7 +132,7 @@ def compute_portfolio_metrics(
             "max_drawdown": np.nan,
         }
 
-    # ---- Annualized return ----
+    # ---- Annualized return (geometric) ----
     cumulative = (1.0 + pr).prod()
     n = len(pr)
     annual_return = cumulative ** (periods_per_year / n) - 1.0
@@ -123,15 +140,14 @@ def compute_portfolio_metrics(
     # ---- Annualized volatility ----
     annual_vol = pr.std() * np.sqrt(periods_per_year)
 
-    # ---- Sharpe ratio ----
+    # ---- Sharpe ratio (rf = 0) ----
     sharpe = annual_return / annual_vol if annual_vol > 0 else np.nan
 
     # ---- Max drawdown ----
     cum_val = compute_cumulated_values(pr, initial_value=1.0)
     mdd = max_drawdown(cum_val)
 
-    # Base metrics
-    metrics = {
+    metrics: dict[str, float] = {
         "annual_return": float(annual_return),
         "annual_vol": float(annual_vol),
         "sharpe": float(sharpe),
@@ -140,21 +156,16 @@ def compute_portfolio_metrics(
 
     # ---- Diversification effects (optional) ----
     if (rets is not None) and (weights is not None):
-
-        # Sync dates between asset returns and portfolio returns
         asset_rets = rets.dropna(how="all")
         common_idx = pr.index.intersection(asset_rets.index)
         asset_rets = asset_rets.loc[common_idx]
 
         if not asset_rets.empty:
-
-            # Annualized vol of each asset
             asset_vols = asset_rets.std() * np.sqrt(periods_per_year)
 
             # Naive vol = sum(|w_i| * sigma_i)
             naive_vol = float(np.sum(np.abs(weights) * asset_vols.values))
 
-            # Diversification ratio
             if annual_vol > 0:
                 diversification_ratio = naive_vol / annual_vol
             else:
@@ -166,14 +177,85 @@ def compute_portfolio_metrics(
     return metrics
 
 
-
-# ---------------------------------------------
-# 7 — CORRELATION MATRIX
-# ---------------------------------------------
-
-def compute_correlation_matrix(asset_returns: pd.DataFrame) -> pd.DataFrame:
+def compute_correlation_matrix(rets: pd.DataFrame) -> pd.DataFrame:
     """
-    Matrice de corrélation entre les actifs.
+    Simple correlation matrix of asset returns.
     """
-    return asset_returns.corr()
+    return rets.corr()
 
+
+# --------------------------------------------------
+# Portfolio with rebalancing
+# --------------------------------------------------
+
+
+def compute_portfolio_returns_with_rebalancing(
+    rets: pd.DataFrame,
+    weights: np.ndarray,
+    rebal_freq: str = "none",
+) -> pd.Series:
+    """
+    Compute portfolio returns with periodic rebalancing to target weights.
+
+    Parameters
+    ----------
+    rets : pd.DataFrame
+        Asset returns, index = dates, columns = tickers.
+    weights : np.ndarray
+        Target portfolio weights (sum = 1), aligned with rets.columns.
+    rebal_freq : str
+        'none'  -> no rebalancing (static weights)
+        'M'     -> rebalance monthly
+        'Q'     -> rebalance quarterly
+        'A'     -> rebalance yearly
+
+    Returns
+    -------
+    pd.Series
+        Daily portfolio returns with rebalancing.
+    """
+    if rebal_freq is None or rebal_freq.lower() == "none":
+        return compute_portfolio_returns(rets, weights)
+
+    rets_clean = rets.fillna(0.0).sort_index()
+    dates = rets_clean.index
+
+    # Define rebalancing dates: first date of each period
+    try:
+        grouped = rets_clean.groupby(pd.Grouper(freq=rebal_freq))
+    except Exception:
+        # Invalid frequency -> fallback to static weights
+        return compute_portfolio_returns(rets, weights)
+
+    rebal_dates: list[pd.Timestamp] = []
+    for _, grp in grouped:
+        if len(grp) > 0:
+            rebal_dates.append(grp.index[0])
+    rebal_dates_set = set(rebal_dates)
+
+    # Simulate portfolio path
+    port_rets = []
+    portfolio_value = 1.0
+    holdings = portfolio_value * np.array(weights, dtype=float)
+
+    for t, dt in enumerate(dates):
+        r_t = rets_clean.iloc[t].values  # per-asset returns at date dt
+
+        # Update holdings with asset returns
+        holdings = holdings * (1.0 + r_t)
+        new_portfolio_value = float(holdings.sum())
+
+        step_ret = new_portfolio_value / portfolio_value - 1.0
+        port_rets.append(step_ret)
+        portfolio_value = new_portfolio_value
+
+        # Rebalance at this date if needed
+        if dt in rebal_dates_set:
+            holdings = portfolio_value * np.array(weights, dtype=float)
+
+    port_rets_series = pd.Series(
+        port_rets,
+        index=dates,
+        name="Portfolio Returns",
+    )
+    return port_rets_series
