@@ -97,52 +97,73 @@ def max_drawdown(series: pd.Series) -> float:
 
 def compute_portfolio_metrics(
     portfolio_returns: pd.Series,
-    risk_free_rate: float = 0.0,
+    rets: pd.DataFrame | None = None,
+    weights: np.ndarray | None = None,
     periods_per_year: int = 252,
-) -> Dict[str, float]:
+) -> dict:
     """
-    Calcule les principales métriques du portefeuille.
-
-    Parameters
-    ----------
-    portfolio_returns : Series
-        Rendements du portefeuille (fréquence = daily par défaut).
-    risk_free_rate : float
-        Taux sans risque annualisé (ex: 0.02 pour 2%)
-    periods_per_year : int
-        252 pour daily, 52 pour weekly, 12 pour monthly.
-
-    Returns
-    -------
-    dict avec :
-        - annual_return
-        - annual_vol
-        - sharpe
-        - max_drawdown
+    Calcule les métriques principales du portefeuille.
     """
-    mean_ret = portfolio_returns.mean()
-    vol = portfolio_returns.std()
 
-    # rendement annualisé (en partant d'un rendement moyen par période)
-    ann_return = (1 + mean_ret) ** periods_per_year - 1
-    # volatilité annualisée
-    ann_vol = vol * np.sqrt(periods_per_year)
+    pr = portfolio_returns.dropna()
 
-    if ann_vol > 0:
-        sharpe = (ann_return - risk_free_rate) / ann_vol
-    else:
-        sharpe = np.nan
+    if pr.empty:
+        return {
+            "annual_return": np.nan,
+            "annual_vol": np.nan,
+            "sharpe": np.nan,
+            "max_drawdown": np.nan,
+        }
 
-    # courbe cumulée pour calculer le max drawdown
-    cum = (1 + portfolio_returns).cumprod()
-    mdd = max_drawdown(cum)
+    # ---- Annualized return ----
+    cumulative = (1.0 + pr).prod()
+    n = len(pr)
+    annual_return = cumulative ** (periods_per_year / n) - 1.0
 
-    return {
-        "annual_return": float(ann_return),
-        "annual_vol": float(ann_vol),
+    # ---- Annualized volatility ----
+    annual_vol = pr.std() * np.sqrt(periods_per_year)
+
+    # ---- Sharpe ratio ----
+    sharpe = annual_return / annual_vol if annual_vol > 0 else np.nan
+
+    # ---- Max drawdown ----
+    cum_val = compute_cumulated_values(pr, initial_value=1.0)
+    mdd = max_drawdown(cum_val)
+
+    # Base metrics
+    metrics = {
+        "annual_return": float(annual_return),
+        "annual_vol": float(annual_vol),
         "sharpe": float(sharpe),
         "max_drawdown": float(mdd),
     }
+
+    # ---- Diversification effects (optional) ----
+    if (rets is not None) and (weights is not None):
+
+        # Sync dates between asset returns and portfolio returns
+        asset_rets = rets.dropna(how="all")
+        common_idx = pr.index.intersection(asset_rets.index)
+        asset_rets = asset_rets.loc[common_idx]
+
+        if not asset_rets.empty:
+
+            # Annualized vol of each asset
+            asset_vols = asset_rets.std() * np.sqrt(periods_per_year)
+
+            # Naive vol = sum(|w_i| * sigma_i)
+            naive_vol = float(np.sum(np.abs(weights) * asset_vols.values))
+
+            # Diversification ratio
+            if annual_vol > 0:
+                diversification_ratio = naive_vol / annual_vol
+            else:
+                diversification_ratio = np.nan
+
+            metrics["naive_annual_vol"] = naive_vol
+            metrics["diversification_ratio"] = float(diversification_ratio)
+
+    return metrics
 
 
 

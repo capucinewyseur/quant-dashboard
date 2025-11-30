@@ -3,6 +3,7 @@
 from datetime import datetime, date
 
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -42,7 +43,8 @@ def run():
 
     # 2) Période d'analyse
     today = date.today()
-    default_start = date(today.year - 3, today.month, today.day)
+    # 1 an par défaut
+    default_start = date(today.year - 1, today.month, today.day)
 
     start_date = st.sidebar.date_input("Start date", default_start)
     end_date = st.sidebar.date_input("End date", today)
@@ -58,7 +60,7 @@ def run():
         index=0,
     )
 
-    raw_weights = {}
+    raw_weights: dict[str, float] = {}
     if weights_mode == "Custom":
         st.sidebar.subheader("Custom weights")
         for t in tickers:
@@ -75,7 +77,7 @@ def run():
     # Normalisation des poids (somme = 1)
     weights = normalize_weights(raw_weights, tickers)
 
-    # ---------- DISPLAY: selected assets + weights (clean) ----------
+    # ---------- DISPLAY: selected assets + weights ----------
     st.write("### Selected assets")
     st.write(", ".join(tickers))
 
@@ -102,8 +104,8 @@ def run():
         st.error("No price data downloaded. Please check tickers or dates.")
         return
 
-    st.write("### Raw prices (first rows)")
-    st.dataframe(prices.head())
+    st.write("### Raw prices (recent rows)")
+    st.dataframe(prices.sort_index(ascending=False).head())
 
     # -----------------------------------------
     # Returns, portefeuille, métriques
@@ -119,19 +121,28 @@ def run():
 
     fig = go.Figure()
 
-    # Normalisation des actifs à 100 au départ
-    norm_prices = prices / prices.iloc[0] * 100.0
+    # Normalisation des actifs à 100 au départ (par 1er prix valide)
+    for col in prices.columns:
+        series = prices[col]
 
-    for col in norm_prices.columns:
+        non_na = series.dropna()
+        if non_na.empty:
+            # Aucun prix valide pour cet actif sur la période -> on le skip
+            continue
+
+        first_valid = non_na.iloc[0]
+        series_norm = series / first_valid * 100.0
+
         fig.add_trace(
             go.Scatter(
-                x=norm_prices.index,
-                y=norm_prices[col],
+                x=series_norm.index,
+                y=series_norm,
                 mode="lines",
                 name=col,
             )
         )
 
+    # Ajout de la courbe portefeuille
     fig.add_trace(
         go.Scatter(
             x=port_val.index,
@@ -151,17 +162,28 @@ def run():
     st.plotly_chart(fig, use_container_width=True)
 
     # -----------------------------------------
-    # Metrics du portefeuille
+    # Metrics du portefeuille (incl. diversification)
     # -----------------------------------------
     st.write("### Portfolio metrics")
 
-    metrics = compute_portfolio_metrics(port_rets)
+    metrics = compute_portfolio_metrics(
+        port_rets,
+        rets=rets,
+        weights=weights,
+        periods_per_year=252,
+    )
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Annual return", f"{metrics['annual_return']*100:.2f} %")
     col2.metric("Annual vol", f"{metrics['annual_vol']*100:.2f} %")
     col3.metric("Sharpe", f"{metrics['sharpe']:.2f}")
     col4.metric("Max drawdown", f"{metrics['max_drawdown']*100:.2f} %")
+
+    div_ratio = metrics.get("diversification_ratio")
+    if div_ratio is not None and not np.isnan(div_ratio):
+        col5.metric("Diversification ratio", f"{div_ratio:.2f}")
+    else:
+        col5.metric("Diversification ratio", "N/A")
 
     # -----------------------------------------
     # Matrice de corrélation
