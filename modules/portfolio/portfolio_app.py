@@ -2,6 +2,7 @@
 
 from datetime import datetime, date
 
+import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -74,10 +75,17 @@ def run():
     # Normalisation des poids (somme = 1)
     weights = normalize_weights(raw_weights, tickers)
 
+    # ---------- DISPLAY: selected assets + weights (clean) ----------
     st.write("### Selected assets")
     st.write(", ".join(tickers))
+
     st.write("**Portfolio weights:**")
-    st.write({t: round(w, 3) for t, w in zip(tickers, weights)})
+    weights_dict = {t: float(w) for t, w in zip(tickers, weights)}
+    weights_df = (
+        pd.DataFrame.from_dict(weights_dict, orient="index", columns=["Weight"])
+        .rename_axis("Asset")
+    )
+    st.dataframe(weights_df.style.format({"Weight": "{:.2%}"}))
 
     # -----------------------------------------
     # Chargement des prix
