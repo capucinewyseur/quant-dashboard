@@ -3,13 +3,23 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
+
 from modules.data import load_asset
 from modules.indicators import add_rsi, add_macd, add_sma
 from modules.strategies import buy_and_hold, rsi_strategy, momentum_strategy
-from modules.backtesting import (apply_strategy_returns, build_equity_curves, 
-                                 compute_returns, apply_strategy_position, compute_cumulative_returns,
-                                 backtest_complete,
-                                 compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr, compute_total_return)
+from modules.backtesting import (
+    apply_strategy_returns,
+    build_equity_curves,
+    compute_returns,
+    apply_strategy_position,
+    compute_cumulative_returns,
+    backtest_complete,
+    compute_volatility,
+    compute_sharpe_ratio,
+    compute_max_drawdown,
+    compute_cagr,
+    compute_total_return,
+)
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
@@ -25,51 +35,55 @@ st_autorefresh(interval=5 * 60 * 1000, key="data_refresh")
 st.title("Quant Dashboard - Python, Git, Linux Project for Finance")
 st.caption("Quantitative analysis dashboard for finance")
 
+# -----------------------------
+# Navigation principale
+# -----------------------------
 st.sidebar.header("Navigation")
 st.sidebar.markdown("---")
 page = st.sidebar.radio("Module", ["Single Asset", "Portfolio"])
 st.sidebar.markdown("---")
 
-# Sélection du ticker dans la sidebar
-st.sidebar.subheader("Asset Selection")
-ticker_options = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "JPM", "V", "JNJ"]
-ticker_selected = st.sidebar.selectbox("Select Ticker", ticker_options, index=0)
-ticker_custom = st.sidebar.text_input("Or enter custom ticker", "")
-ticker = ticker_custom if ticker_custom else ticker_selected
-
-# Sélection de la périodicité
-st.sidebar.markdown("---")
-periodicity = st.sidebar.selectbox(
-    "Periodicity",
-    ["Daily", "Weekly", "Monthly"],
-    index=0
-)
-
-# Mapping périodicité vers interval
-periodicity_map = {
-    "Daily": "1d",
-    "Weekly": "1wk",
-    "Monthly": "1mo"
-}
-interval = periodicity_map[periodicity]
-
-# Sélection de la stratégie dans la sidebar
-st.sidebar.markdown("---")
-strategy_name = st.sidebar.selectbox(
-    "Strategy",
-    ["Buy & Hold", "RSI strategy", "Momentum strategy"]
-)
-
+# =============================
+# MODE SINGLE ASSET
+# =============================
 if page == "Single Asset":
-    # Chargement des données avec le ticker et la périodicité sélectionnés
+    # --------- Sidebar : paramètres single asset ----------
+    st.sidebar.subheader("Asset Selection")
+    ticker_options = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA",
+                      "META", "NVDA", "JPM", "V", "JNJ"]
+    ticker_selected = st.sidebar.selectbox("Select Ticker", ticker_options, index=0)
+    ticker_custom = st.sidebar.text_input("Or enter custom ticker", "")
+    ticker = ticker_custom if ticker_custom else ticker_selected
+
+    st.sidebar.markdown("---")
+    periodicity = st.sidebar.selectbox(
+        "Periodicity",
+        ["Daily", "Weekly", "Monthly"],
+        index=0
+    )
+
+    periodicity_map = {
+        "Daily": "1d",
+        "Weekly": "1wk",
+        "Monthly": "1mo"
+    }
+    interval = periodicity_map[periodicity]
+
+    st.sidebar.markdown("---")
+    strategy_name = st.sidebar.selectbox(
+        "Strategy",
+        ["Buy & Hold", "RSI strategy", "Momentum strategy"]
+    )
+
+    # --------- Chargement des données single asset ----------
     df = load_asset(ticker, interval=interval)
-    
+
     # Ajout des indicateurs techniques
     rsi_window = st.sidebar.slider("RSI window", 5, 30, 14)
     df = add_rsi(df, window=rsi_window)
     df = add_macd(df)
     df = add_sma(df, window=20)
-    
+
     # Application de la stratégie sélectionnée
     if strategy_name == "Buy & Hold":
         strat_df = buy_and_hold(df)
@@ -80,54 +94,54 @@ if page == "Single Asset":
     else:
         momentum_period = st.sidebar.slider("Momentum period", 5, 50, 12)
         strat_df = momentum_strategy(df, period=momentum_period)
-    
-    # Backtesting complet : calculer les retours, appliquer la stratégie, construire les courbes
+
+    # Backtesting complet
     if 'strat_df' in locals():
-        # Utiliser la fonction complète de backtesting
-        strat_df = backtest_complete(strat_df, 
-                                     position_col="Position",
-                                     price_col="Close",
-                                     return_col="return",
-                                     initial_capital=1.0)
-        
-        # Calcul des métriques de performance
+        strat_df = backtest_complete(
+            strat_df,
+            position_col="Position",
+            price_col="Close",
+            return_col="return",
+            initial_capital=1.0
+        )
+
         vol_annual = None
         sharpe = None
         max_dd = None
         cagr = None
         total_return = None
-        
+
         if "StrategyReturn" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
             strat_ret = strat_df["StrategyReturn"].dropna()
             equity_strat = strat_df["Equity_Strategy"].dropna()
-            
+
             if len(strat_ret) > 0 and len(equity_strat) > 0:
-                # Déterminer periods_per_year selon la périodicité
                 periods_map = {
                     "Daily": 252,
                     "Weekly": 52,
                     "Monthly": 12
                 }
                 periods_per_year = periods_map.get(periodicity, 252)
-                
+
                 vol_annual = compute_volatility(strat_ret, periods_per_year=periods_per_year)
-                sharpe = compute_sharpe_ratio(strat_ret, periods_per_year=periods_per_year, risk_free_rate=0.0)
+                sharpe = compute_sharpe_ratio(
+                    strat_ret,
+                    periods_per_year=periods_per_year,
+                    risk_free_rate=0.0
+                )
                 max_dd = compute_max_drawdown(equity_strat)
                 cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
                 total_return = compute_total_return(equity_strat)
-    
-    # Graphique principal : Prix brut + Valeur cumulée de la stratégie (OBLIGATOIRE)
-    # Ce graphique doit afficher 2 courbes :
-    # 1. Prix brut de l'actif (axe Y gauche)
-    # 2. Valeur cumulée de la stratégie (axe Y droit)
+
+    # --------- Graphique principal : prix vs stratégie ----------
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
         st.markdown("---")
-        st.subheader(f"Main Chart - Raw Asset Price vs Cumulative Strategy Value")
+        st.subheader("Main Chart - Raw Asset Price vs Cumulative Strategy Value")
         st.caption(f"Asset: {ticker} | Strategy: {strategy_name}")
-        
+
         fig = go.Figure()
-        
-        # Courbe 1 : Prix brut de l'actif (OBLIGATOIRE - axe Y gauche)
+
+        # Prix brut
         fig.add_trace(go.Scatter(
             x=df.index,
             y=df["Close"],
@@ -137,8 +151,8 @@ if page == "Single Asset":
             yaxis='y',
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'
         ))
-        
-        # Courbe 2 : Valeur cumulée de la stratégie (OBLIGATOIRE - axe Y droit)
+
+        # Valeur cumulée de la stratégie
         fig.add_trace(go.Scatter(
             x=strat_df.index,
             y=strat_df["Equity_Strategy"],
@@ -148,8 +162,7 @@ if page == "Single Asset":
             yaxis='y2',
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Cumulative Value: %{y:.4f}<extra></extra>'
         ))
-        
-        # Configuration avec deux axes Y
+
         fig.update_layout(
             title=f"Raw Price vs Strategy Performance ({strategy_name})",
             xaxis_title="Date",
@@ -168,71 +181,62 @@ if page == "Single Asset":
             height=500,
             showlegend=True
         )
-        
+
         st.plotly_chart(fig, use_container_width=True)
-    
+
+    # --------- Graphiques secondaires ----------
     st.subheader(f"{ticker} Price")
     st.line_chart(df["Close"])
-    
+
     st.subheader("RSI")
     st.line_chart(df["RSI"])
-    
-    # Affichage des positions de la stratégie
+
     if 'strat_df' in locals():
         st.subheader("Strategy Positions")
         st.line_chart(strat_df["Position"])
-        
-        # Affichage des equity curves
+
         if "Equity_Asset" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
             st.subheader("Equity Curves - Strategy vs Buy & Hold Comparison")
+            st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
 
-            # Fix MultiIndex → aplatir les colonnes uniquement pour l'affichage
-            if isinstance(strat_df.columns, pd.MultiIndex):
-                strat_plot = strat_df.copy()
-                strat_plot.columns = strat_plot.columns.get_level_values(0)
-            else:
-                strat_plot = strat_df
-
-            st.line_chart(strat_plot[["Equity_Asset", "Equity_Strategy"]])
-            
-            # Affichage des métriques de performance
-            if vol_annual is not None and sharpe is not None and max_dd is not None and cagr is not None and total_return is not None:
+            if all(v is not None for v in [vol_annual, sharpe, max_dd, cagr, total_return]):
                 st.markdown("---")
                 st.subheader("Strategy Performance Metrics")
                 col1, col2, col3, col4, col5 = st.columns(5)
-                
+
                 with col1:
                     st.metric("Sharpe Ratio", f"{sharpe:.2f}" if not np.isnan(sharpe) else "N/A")
-                
                 with col2:
                     max_dd_display = f"{max_dd:.2%}" if not np.isnan(max_dd) else "N/A"
                     st.metric("Max Drawdown", max_dd_display)
-                
                 with col3:
                     st.metric("Annualized Volatility", f"{vol_annual:.2%}")
-                
                 with col4:
                     cagr_display = f"{cagr:.2%}" if not np.isnan(cagr) else "N/A"
                     st.metric("CAGR", cagr_display)
-                
                 with col5:
                     total_return_display = f"{total_return:.2%}" if not np.isnan(total_return) else "N/A"
                     st.metric("Total Return", total_return_display)
-    
-    # Bloc KPIs simples (prix actuel, rendement jour, vol 20j)
+
+    # KPIs journaliers
     st.markdown("---")
     st.subheader("Daily KPIs")
     last_price = float(df["Close"].iloc[-1])
     daily_ret = float(df["return"].iloc[-1])
     vol_20d = float(df["return"].rolling(20).std().iloc[-1]) * np.sqrt(252)
-    
+
     col1, col2, col3 = st.columns(3)
     col1.metric("Last Price", f"${last_price:.2f}")
     col2.metric("Daily Return", f"{daily_ret:.2%}")
     col3.metric("20d Annualized Vol", f"{vol_20d:.2%}")
-    
-    # Afficher aussi le module détaillé avec le ticker sélectionné
-    display_single_asset_module(ticker)
-else:
-    display_portfolio_module()
 
+    # Module détaillé single asset (si tu veux le garder)
+    display_single_asset_module(ticker)
+
+# =============================
+# MODE PORTFOLIO
+# =============================
+else:
+    # Aucun contrôle single-asset n’est créé ici.
+    # Tout le sidebar pour le portefeuille est géré dans display_portfolio_module().
+    display_portfolio_module()
