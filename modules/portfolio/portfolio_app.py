@@ -71,14 +71,43 @@ def run():
         st.error("Start date must be before end date.")
         return
 
-    # 3) Mode de poids : equal / price / mkt cap / custom
+    # 3) Data interval (intraday / daily)
+    interval_label = st.sidebar.selectbox(
+        "Data interval",
+        ["15 minutes", "30 minutes", "1 hour", "4 hours", "Daily"],
+        index=4,
+        help="Sampling frequency of downloaded data.",
+    )
+
+    interval_map = {
+        "15 minutes": "15m",
+        "30 minutes": "30m",
+        "1 hour": "60m",
+        "4 hours": "240m",
+        "Daily": "1d",
+    }
+
+    # Approximate number of periods per year for annualization
+    # (assuming ~252 trading days, ~6.5h per day)
+    periods_map = {
+        "15 minutes": 26 * 252,   # 6.5h * 4 = 26 bars/day
+        "30 minutes": 13 * 252,
+        "1 hour": 6 * 252,        # approx (ignore the .5)
+        "4 hours": 2 * 252,       # approx
+        "Daily": 252,
+    }
+
+    data_interval = interval_map[interval_label]
+    periods_per_year = periods_map[interval_label]
+
+    # 4) Mode de poids : equal / price / mkt cap / custom
     weights_mode = st.sidebar.radio(
         "Weights mode",
         ["Equal weight", "Price-weighted", "Market-cap weighted", "Custom"],
         index=0,
     )
 
-    # 4) Rebalancing frequency
+    # 5) Rebalancing frequency
     rebal_label = st.sidebar.selectbox(
         "Rebalancing frequency",
         ["No rebalancing (buy & hold)", "Monthly", "Quarterly", "Yearly"],
@@ -114,11 +143,11 @@ def run():
             tickers=tickers,
             start=datetime.combine(start_date, datetime.min.time()),
             end=datetime.combine(end_date, datetime.min.time()),
-            interval="1d",
+            interval=data_interval,
         )
 
     if prices.empty:
-        st.error("No price data downloaded. Please check tickers or dates.")
+        st.error("No price data downloaded. Please check tickers, dates or interval.")
         return
 
     st.write("### Raw prices (recent rows)")
@@ -229,7 +258,7 @@ def run():
         port_rets,
         rets=rets,
         weights=weights,
-        periods_per_year=252,
+        periods_per_year=periods_per_year,
     )
 
     col1, col2, col3, col4, col5 = st.columns(5)
