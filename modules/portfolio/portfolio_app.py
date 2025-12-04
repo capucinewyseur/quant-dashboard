@@ -213,12 +213,12 @@ def run():
     fig = go.Figure()
 
     # Normalisation des actifs à 100 (par 1er prix valide)
-    for col in prices.columns:
-        series = prices[col]
-        non_na = series.dropna()
-        if non_na.empty:
+    prices_plot = prices.ffill()
+    for col in prices_plot.columns:
+        series = prices_plot[col]
+        if series.isna().all():
             continue
-        first_valid = non_na.iloc[0]
+        first_valid = series.dropna().iloc[0]
         series_norm = series / first_valid * 100.0
 
         fig.add_trace(
