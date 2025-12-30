@@ -133,10 +133,10 @@ def compute_portfolio_metrics(
     # Annualized volatility
     annual_vol = pr.std() * np.sqrt(periods_per_year)
 
-    # ---- Sharpe ratio (rf = 0) ----
+    # Sharpe ratio (rf = 0)
     sharpe = annual_return / annual_vol if annual_vol > 0 else np.nan
 
-    # ---- Max drawdown ----
+    # Max drawdown
     cum_val = compute_cumulated_values(pr, initial_value=1.0)
     mdd = max_drawdown(cum_val)
 
@@ -147,7 +147,7 @@ def compute_portfolio_metrics(
         "max_drawdown": float(mdd),
     }
 
-    # ---- Diversification effects (optional) ----
+    # Diversification effects (optional)
     if (rets is not None) and (weights is not None):
         asset_rets = rets.dropna(how="all")
         common_idx = pr.index.intersection(asset_rets.index)
