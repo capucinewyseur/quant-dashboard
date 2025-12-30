@@ -6,11 +6,7 @@ import numpy as np
 import pandas as pd
 
 
-# --------------------------------------------------
 # Basic helpers
-# --------------------------------------------------
-
-
 def compute_returns(prices: pd.DataFrame, log: bool = False) -> pd.DataFrame:
     """
     Compute daily (or period) returns from price data.
@@ -129,12 +125,12 @@ def compute_portfolio_metrics(
             "max_drawdown": np.nan,
         }
 
-    # ---- Annualized return (geometric) ----
+    # Annualized return (geometric)
     cumulative = (1.0 + pr).prod()
     n = len(pr)
     annual_return = cumulative ** (periods_per_year / n) - 1.0
 
-    # ---- Annualized volatility ----
+    # Annualized volatility
     annual_vol = pr.std() * np.sqrt(periods_per_year)
 
     # ---- Sharpe ratio (rf = 0) ----
