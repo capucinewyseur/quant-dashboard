@@ -177,11 +177,7 @@ def compute_correlation_matrix(rets: pd.DataFrame) -> pd.DataFrame:
     return rets.corr()
 
 
-# --------------------------------------------------
 # Portfolio with rebalancing
-# --------------------------------------------------
-
-
 def compute_portfolio_returns_with_rebalancing(
     rets: pd.DataFrame,
     weights: np.ndarray,
