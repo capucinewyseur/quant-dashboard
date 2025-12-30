@@ -91,11 +91,8 @@ def max_drawdown(cum_values: pd.Series) -> float:
     return float(drawdowns.min())
 
 
-# --------------------------------------------------
+
 # Portfolio metrics (incl. diversification)
-# --------------------------------------------------
-
-
 def compute_portfolio_metrics(
     portfolio_returns: pd.Series,
     rets: pd.DataFrame | None = None,
