@@ -95,43 +95,51 @@ if page == "Single Asset":
         momentum_period = st.sidebar.slider("Momentum period", 5, 50, 12)
         strat_df = momentum_strategy(df, period=momentum_period)
 
-    # Backtesting complet
-    if 'strat_df' in locals():
-        strat_df = backtest_complete(
-            strat_df,
-            position_col="Position",
-            price_col="Close",
-            return_col="return",
-            initial_capital=1.0
-        )
+# Backtesting complet
+if 'strat_df' in locals():
+    strat_df = backtest_complete(
+        strat_df,
+        position_col="Position",
+        price_col="Close",
+        return_col="return",
+        initial_capital=1.0
+    )
 
-        vol_annual = None
-        sharpe = None
-        max_dd = None
-        cagr = None
-        total_return = None
+    # --- FIX: flatten MultiIndex columns if needed (Streamlit expects flat columns)
+    if isinstance(strat_df.columns, pd.MultiIndex):
+        strat_df.columns = [
+            c[0] if isinstance(c, tuple) else c
+            for c in strat_df.columns
+        ]
 
-        if "StrategyReturn" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
-            strat_ret = strat_df["StrategyReturn"].dropna()
-            equity_strat = strat_df["Equity_Strategy"].dropna()
+    vol_annual = None
+    sharpe = None
+    max_dd = None
+    cagr = None
+    total_return = None
 
-            if len(strat_ret) > 0 and len(equity_strat) > 0:
-                periods_map = {
-                    "Daily": 252,
-                    "Weekly": 52,
-                    "Monthly": 12
-                }
-                periods_per_year = periods_map.get(periodicity, 252)
+    if "StrategyReturn" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
+        strat_ret = strat_df["StrategyReturn"].dropna()
+        equity_strat = strat_df["Equity_Strategy"].dropna()
 
-                vol_annual = compute_volatility(strat_ret, periods_per_year=periods_per_year)
-                sharpe = compute_sharpe_ratio(
-                    strat_ret,
-                    periods_per_year=periods_per_year,
-                    risk_free_rate=0.0
-                )
-                max_dd = compute_max_drawdown(equity_strat)
-                cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
-                total_return = compute_total_return(equity_strat)
+        if len(strat_ret) > 0 and len(equity_strat) > 0:
+            periods_map = {
+                "Daily": 252,
+                "Weekly": 52,
+                "Monthly": 12
+            }
+            periods_per_year = periods_map.get(periodicity, 252)
+
+            vol_annual = compute_volatility(strat_ret, periods_per_year=periods_per_year)
+            sharpe = compute_sharpe_ratio(
+                strat_ret,
+                periods_per_year=periods_per_year,
+                risk_free_rate=0.0
+            )
+            max_dd = compute_max_drawdown(equity_strat)
+            cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
+            total_return = compute_total_return(equity_strat)
+
 
     # --------- Graphique principal : prix vs stratégie ----------
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
@@ -195,9 +203,12 @@ if page == "Single Asset":
         st.subheader("Strategy Positions")
         st.line_chart(strat_df["Position"])
 
-        if "Equity_Asset" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
+        # Affichage des equity curves
+        if all(col in strat_df.columns for col in ["Equity_Asset", "Equity_Strategy"]):
             st.subheader("Equity Curves - Strategy vs Buy & Hold Comparison")
             st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
+        else:
+            st.info("Equity curves are not available for this configuration.")
 
             if all(v is not None for v in [vol_annual, sharpe, max_dd, cagr, total_return]):
                 st.markdown("---")
