@@ -24,9 +24,26 @@ from modules.portfolio.portfolio_logic import (
 
 def _get_market_caps(tickers: list[str]) -> dict[str, float]:
     """
-    Fetch market caps from yfinance for the given tickers.
-    If not available (FX, futures...), fallback to 1.0.
+    Retrieve market capitalizations for a list of assets.
+
+    Market capitalizations are fetched using yfinance. If a market cap
+    is not available (e.g. FX rates, commodities, indices), a fallback
+    value of 1.0 is used so that the asset can still be included in
+    market-cap-weighted portfolios.
+
+    Parameters
+    ----------
+    tickers : list[str]
+        List of asset tickers.
+
+    Returns
+    -------
+    dict[str, float]
+        Dictionary mapping each ticker to its market capitalization
+        (or 1.0 if unavailable).
     """
+    # Fetch market capitalizations from yfinance for the given tickers
+    # If market cap is not available (FX, futures, indices), fallback to 1.0
     caps: dict[str, float] = {}
     for t in tickers:
         try:
@@ -41,14 +58,23 @@ def _get_market_caps(tickers: list[str]) -> dict[str, float]:
 
 
 def run():
+    """
+    Run the multi-asset portfolio Streamlit module.
+
+    This function handles:
+    - User input through the sidebar (assets, dates, weights, rebalancing)
+    - Price data loading at different frequencies
+    - Portfolio construction with optional rebalancing
+    - Visualization of asset and portfolio performance
+    - Computation and display of portfolio-level metrics, including
+      diversification effects and correlation structure
+    """
     st.title("Quant B — Multi-Asset Portfolio Module")
 
-    # -----------------------------------------
-    # Sidebar : paramètres du portefeuille
-    # -----------------------------------------
+    # Sidebar: portfolio parameters
     st.sidebar.header("Portfolio settings")
 
-    # 1) Choix des actifs
+    # Asset selection
     tickers = st.sidebar.multiselect(
         "Select assets",
         options=DEFAULT_TICKERS,
@@ -60,9 +86,9 @@ def run():
         st.warning("Please select at least two assets to build a portfolio.")
         return
 
-    # 2) Période d'analyse
+    # Analysis period
     today = date.today()
-    default_start = date(today.year - 1, today.month, today.day)  # 1 an par défaut
+    default_start = date(today.year - 1, today.month, today.day)  # default: 1 year
 
     start_date = st.sidebar.date_input("Start date", default_start)
     end_date = st.sidebar.date_input("End date", today)
@@ -71,7 +97,7 @@ def run():
         st.error("Start date must be before end date.")
         return
 
-    # 3) Data interval (intraday / daily)
+    # Data interval (intraday / daily)
     interval_label = st.sidebar.selectbox(
         "Data interval",
         ["15 minutes", "30 minutes", "1 hour", "4 hours", "Daily"],
@@ -88,26 +114,26 @@ def run():
     }
 
     # Approximate number of periods per year for annualization
-    # (assuming ~252 trading days, ~6.5h per day)
+    # Assumes ~252 trading days and ~6.5 trading hours per day
     periods_map = {
-        "15 minutes": 26 * 252,   # 6.5h * 4 = 26 bars/day
+        "15 minutes": 26 * 252,
         "30 minutes": 13 * 252,
-        "1 hour": 6 * 252,        # approx (ignore the .5)
-        "4 hours": 2 * 252,       # approx
+        "1 hour": 6 * 252,
+        "4 hours": 2 * 252,
         "Daily": 252,
     }
 
     data_interval = interval_map[interval_label]
     periods_per_year = periods_map[interval_label]
 
-    # 4) Mode de poids : equal / price / mkt cap / custom
+    # Weighting scheme: equal / price / market cap / custom
     weights_mode = st.sidebar.radio(
         "Weights mode",
         ["Equal weight", "Price-weighted", "Market-cap weighted", "Custom"],
         index=0,
     )
 
-    # 5) Rebalancing frequency
+    # Rebalancing frequency
     rebal_label = st.sidebar.selectbox(
         "Rebalancing frequency",
         ["No rebalancing (buy & hold)", "Monthly", "Quarterly", "Yearly"],
@@ -122,7 +148,7 @@ def run():
     }
     rebal_freq = freq_map[rebal_label]
 
-    # Custom weights sliders (only used if mode == Custom)
+    # Custom weight sliders (used only if Custom mode is selected)
     custom_raw_weights: dict[str, float] = {}
     if weights_mode == "Custom":
         st.sidebar.subheader("Custom weights")
@@ -135,9 +161,7 @@ def run():
                 step=0.01,
             )
 
-    # -----------------------------------------
-    # Chargement des prix
-    # -----------------------------------------
+    # Price data loading
     with st.spinner("Loading price data..."):
         prices = load_multi_asset_prices(
             tickers=tickers,
@@ -153,16 +177,14 @@ def run():
     st.write("### Raw prices (recent rows)")
     st.dataframe(prices.sort_index(ascending=False).head())
 
-    # -----------------------------------------
-    # Construction des poids selon le mode choisi
-    # -----------------------------------------
+    # Weight construction based on selected mode
     raw_weights: dict[str, float] = {}
 
     if weights_mode == "Equal weight":
         raw_weights = {t: 1.0 for t in tickers}
 
     elif weights_mode == "Price-weighted":
-        # Last available price per asset (with forward fill)
+        # Use last available price per asset (with forward fill)
         last_prices = prices.ffill().iloc[-1]
         for t in tickers:
             val = last_prices.get(t, np.nan)
@@ -177,10 +199,10 @@ def run():
     elif weights_mode == "Custom":
         raw_weights = custom_raw_weights
 
-    # Normalize weights (sum = 1)
+    # Normalize weights so that they sum to 1
     weights = normalize_weights(raw_weights, tickers)
 
-    # ---------- DISPLAY: selected assets + weights ----------
+    # Display selected assets and portfolio weights
     st.write("### Selected assets")
     st.write(", ".join(tickers))
 
@@ -192,12 +214,10 @@ def run():
     )
     st.dataframe(weights_df.style.format({"Weight": "{:.2%}"}))
 
-    # -----------------------------------------
-    # Returns, portefeuille, métriques
-    # -----------------------------------------
+    # Returns, portfolio construction, metrics
     rets = compute_returns(prices, log=False)
 
-    # Portfolio returns with chosen rebalancing frequency
+    # Compute portfolio returns with the selected rebalancing frequency
     port_rets = compute_portfolio_returns_with_rebalancing(
         rets,
         weights,
@@ -205,14 +225,12 @@ def run():
     )
     port_val = compute_cumulated_values(port_rets, initial_value=100.0)
 
-    # -----------------------------------------
-    # Graphique : actifs vs portefeuille
-    # -----------------------------------------
+    # Plot: assets vs portfolio
     st.write("### Assets vs Portfolio (normalized to 100)")
 
     fig = go.Figure()
 
-    # Normalisation des actifs à 100 (par 1er prix valide)
+    # Normalize asset prices to 100 using the first valid price
     prices_plot = prices.ffill()
     for col in prices_plot.columns:
         series = prices_plot[col]
@@ -230,7 +248,7 @@ def run():
             )
         )
 
-    # Ajout de la courbe portefeuille
+    # Add portfolio value curve
     fig.add_trace(
         go.Scatter(
             x=port_val.index,
@@ -249,9 +267,7 @@ def run():
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # -----------------------------------------
-    # Metrics du portefeuille (incl. diversification)
-    # -----------------------------------------
+    # Portfolio metrics (including diversification)
     st.write("### Portfolio metrics")
 
     metrics = compute_portfolio_metrics(
@@ -273,9 +289,7 @@ def run():
     else:
         col5.metric("Diversification ratio", "N/A")
 
-    # -----------------------------------------
-    # Matrice de corrélation
-    # -----------------------------------------
+    # Correlation matrix
     st.write("### Correlation matrix")
     corr = compute_correlation_matrix(rets)
     st.dataframe(corr.style.format("{:.2f}"))
