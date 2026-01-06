@@ -7,27 +7,11 @@ from streamlit_autorefresh import st_autorefresh
 from modules.data import load_asset
 from modules.indicators import add_rsi, add_macd, add_sma
 from modules.strategies import buy_and_hold, rsi_strategy, momentum_strategy
-<<<<<<< HEAD
 from modules.backtesting import (apply_strategy_returns, build_equity_curves, 
                                  compute_returns, apply_strategy_position, compute_cumulative_returns,
                                  backtest_complete,
                                  compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr, compute_total_return)
 from modules.prediction import predict_future_prices_simple
-=======
-from modules.backtesting import (
-    apply_strategy_returns,
-    build_equity_curves,
-    compute_returns,
-    apply_strategy_position,
-    compute_cumulative_returns,
-    backtest_complete,
-    compute_volatility,
-    compute_sharpe_ratio,
-    compute_max_drawdown,
-    compute_cagr,
-    compute_total_return,
-)
->>>>>>> origin/Emile
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
@@ -51,7 +35,6 @@ st.sidebar.markdown("---")
 page = st.sidebar.radio("Module", ["Single Asset", "Portfolio"])
 st.sidebar.markdown("---")
 
-<<<<<<< HEAD
 # Asset selection in sidebar
 st.sidebar.subheader("Asset Selection")
 ticker_options = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "JPM", "V", "JNJ"]
@@ -87,55 +70,12 @@ if page == "Single Asset":
     df = load_asset(ticker, interval=interval)
     
     # Add technical indicators
-=======
-# =============================
-# MODE SINGLE ASSET
-# =============================
-if page == "Single Asset":
-    # --------- Sidebar : paramètres single asset ----------
-    st.sidebar.subheader("Asset Selection")
-    ticker_options = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA",
-                      "META", "NVDA", "JPM", "V", "JNJ"]
-    ticker_selected = st.sidebar.selectbox("Select Ticker", ticker_options, index=0)
-    ticker_custom = st.sidebar.text_input("Or enter custom ticker", "")
-    ticker = ticker_custom if ticker_custom else ticker_selected
-
-    st.sidebar.markdown("---")
-    periodicity = st.sidebar.selectbox(
-        "Periodicity",
-        ["Daily", "Weekly", "Monthly"],
-        index=0
-    )
-
-    periodicity_map = {
-        "Daily": "1d",
-        "Weekly": "1wk",
-        "Monthly": "1mo"
-    }
-    interval = periodicity_map[periodicity]
-
-    st.sidebar.markdown("---")
-    strategy_name = st.sidebar.selectbox(
-        "Strategy",
-        ["Buy & Hold", "RSI strategy", "Momentum strategy"]
-    )
-
-    # --------- Chargement des données single asset ----------
-    df = load_asset(ticker, interval=interval)
-
-    # Ajout des indicateurs techniques
->>>>>>> origin/Emile
     rsi_window = st.sidebar.slider("RSI window", 5, 30, 14)
     df = add_rsi(df, window=rsi_window)
     df = add_macd(df)
     df = add_sma(df, window=20)
-<<<<<<< HEAD
     
     # Apply selected strategy
-=======
-
-    # Application de la stratégie sélectionnée
->>>>>>> origin/Emile
     if strategy_name == "Buy & Hold":
         strat_df = buy_and_hold(df)
     elif strategy_name == "RSI strategy":
@@ -145,19 +85,6 @@ if page == "Single Asset":
     else:
         momentum_period = st.sidebar.slider("Momentum period", 5, 50, 12)
         strat_df = momentum_strategy(df, period=momentum_period)
-<<<<<<< HEAD
-    
-    # Complete backtesting: calculate returns, apply strategy, build equity curves
-    if 'strat_df' in locals():
-        # Use complete backtesting function
-        strat_df = backtest_complete(strat_df, 
-                                     position_col="Position",
-                                     price_col="Close",
-                                     return_col="return",
-                                     initial_capital=1.0)
-        
-        # Calcul des métriques de performance
-=======
 
     # Backtesting complet
     if 'strat_df' in locals():
@@ -169,7 +96,6 @@ if page == "Single Asset":
             initial_capital=1.0
         )
 
->>>>>>> origin/Emile
         vol_annual = None
         sharpe = None
         max_dd = None
@@ -197,19 +123,13 @@ if page == "Single Asset":
                 max_dd = compute_max_drawdown(equity_strat)
                 cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
                 total_return = compute_total_return(equity_strat)
-<<<<<<< HEAD
     
     # Main chart: raw asset price and cumulative strategy value
     # Displays two curves: raw price (left Y-axis) and strategy equity (right Y-axis)
-=======
-
-    # --------- Graphique principal : prix vs stratégie ----------
->>>>>>> origin/Emile
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
         st.markdown("---")
         st.subheader("Main Chart - Raw Asset Price vs Cumulative Strategy Value")
         st.caption(f"Asset: {ticker} | Strategy: {strategy_name}")
-<<<<<<< HEAD
         
         # Calculate price predictions
         predictions = predict_future_prices_simple(df, days_ahead=30, price_col="Close")
@@ -217,12 +137,6 @@ if page == "Single Asset":
         fig = go.Figure()
         
         # Raw asset price (left Y-axis)
-=======
-
-        fig = go.Figure()
-
-        # Prix brut
->>>>>>> origin/Emile
         fig.add_trace(go.Scatter(
             x=df.index,
             y=df["Close"],
@@ -232,7 +146,6 @@ if page == "Single Asset":
             yaxis='y',
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'
         ))
-<<<<<<< HEAD
         
         # Add predictions if available
         if not predictions.empty:
@@ -273,10 +186,6 @@ if page == "Single Asset":
             ))
         
         # Cumulative strategy value (right Y-axis)
-=======
-
-        # Valeur cumulée de la stratégie
->>>>>>> origin/Emile
         fig.add_trace(go.Scatter(
             x=strat_df.index,
             y=strat_df["Equity_Strategy"],
@@ -286,12 +195,8 @@ if page == "Single Asset":
             yaxis='y2',
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Cumulative Value: %{y:.4f}<extra></extra>'
         ))
-<<<<<<< HEAD
         
         # Chart configuration with dual Y-axes
-=======
-
->>>>>>> origin/Emile
         fig.update_layout(
             title=f"Raw Price vs Strategy Performance ({strategy_name})",
             xaxis_title="Date",
@@ -312,7 +217,6 @@ if page == "Single Asset":
         )
 
         st.plotly_chart(fig, use_container_width=True)
-<<<<<<< HEAD
         
         # Bonus: Separate prediction chart
         if not predictions.empty:
@@ -392,16 +296,11 @@ if page == "Single Asset":
                 confidence_range = float(predictions['Upper_Bound'].iloc[-1] - predictions['Lower_Bound'].iloc[-1])
                 st.metric("Confidence Range", f"${confidence_range:.2f}")
     
-=======
-
-    # --------- Graphiques secondaires ----------
->>>>>>> origin/Emile
     st.subheader(f"{ticker} Price")
     st.line_chart(df["Close"])
 
     st.subheader("RSI")
     st.line_chart(df["RSI"])
-<<<<<<< HEAD
     
     # Display strategy positions
     if 'strat_df' in locals():
@@ -415,18 +314,6 @@ if page == "Single Asset":
             
             # Display performance metrics
             if vol_annual is not None and sharpe is not None and max_dd is not None and cagr is not None and total_return is not None:
-=======
-
-    if 'strat_df' in locals():
-        st.subheader("Strategy Positions")
-        st.line_chart(strat_df["Position"])
-
-        if "Equity_Asset" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
-            st.subheader("Equity Curves - Strategy vs Buy & Hold Comparison")
-            st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
-
-            if all(v is not None for v in [vol_annual, sharpe, max_dd, cagr, total_return]):
->>>>>>> origin/Emile
                 st.markdown("---")
                 st.subheader("Strategy Performance Metrics")
                 col1, col2, col3, col4, col5 = st.columns(5)
@@ -444,13 +331,8 @@ if page == "Single Asset":
                 with col5:
                     total_return_display = f"{total_return:.2%}" if not np.isnan(total_return) else "N/A"
                     st.metric("Total Return", total_return_display)
-<<<<<<< HEAD
     
     # Daily KPIs: current price, daily return, 20-day volatility
-=======
-
-    # KPIs journaliers
->>>>>>> origin/Emile
     st.markdown("---")
     st.subheader("Daily KPIs")
     last_price = float(df["Close"].iloc[-1])
@@ -461,22 +343,14 @@ if page == "Single Asset":
     col1.metric("Last Price", f"${last_price:.2f}")
     col2.metric("Daily Return", f"{daily_ret:.2%}")
     col3.metric("20d Annualized Vol", f"{vol_20d:.2%}")
-<<<<<<< HEAD
     
     # Display detailed single asset module
     display_single_asset_module(ticker)
 else:
     display_portfolio_module()
-=======
->>>>>>> origin/Emile
 
     # Module détaillé single asset (si tu veux le garder)
     display_single_asset_module(ticker)
-
 # =============================
 # MODE PORTFOLIO
 # =============================
-else:
-    # Aucun contrôle single-asset n’est créé ici.
-    # Tout le sidebar pour le portefeuille est géré dans display_portfolio_module().
-    display_portfolio_module()
