@@ -67,13 +67,13 @@ def display_single_asset_module(ticker="AAPL"):
     
     # Récupération des données historiques avec rendements
     with st.spinner("Loading data..."):
-        # Données récentes pour l'affichage en temps réel
+                # Recent data for real-time display
         try:
             ticker_obj = yf.Ticker(ticker)
             data_recent = ticker_obj.history(period="5d", interval="15m")
         except:
             data_recent = pd.DataFrame()
-        # Données historiques avec rendements pour les KPIs
+                # Historical data with returns for KPIs
         data = load_asset(ticker, start="2018-01-01", interval="1d")
     
     if not data.empty and not data_recent.empty:
