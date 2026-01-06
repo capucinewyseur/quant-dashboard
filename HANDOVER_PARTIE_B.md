@@ -184,7 +184,7 @@ from modules.backtesting import (
     compute_cagr,
     compute_total_return
 )
-```
+
 
 ### Indicateurs Techniques
 ```python
@@ -307,9 +307,4 @@ Pour implémenter la Partie B:
 
 ---
 
-## 🎓 Notes Finales
-
-Le projet est bien structuré et la Partie A est complète. Le binôme peut se concentrer uniquement sur l'implémentation de la Partie B (Portfolio Module) en réutilisant les fonctions existantes.
-
-**Bon courage pour la Partie B! 🚀**
 
