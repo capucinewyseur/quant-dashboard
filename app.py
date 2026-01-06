@@ -7,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh
 from modules.data import load_asset
 from modules.indicators import add_rsi, add_macd, add_sma
 from modules.strategies import buy_and_hold, rsi_strategy, momentum_strategy
-from modules.backtesting import (apply_strategy_returns, build_equity_curves, 
+from modules.backtesting import (apply_strategy_returns, build_equity_curves,
                                  compute_returns, apply_strategy_position, compute_cumulative_returns,
                                  backtest_complete,
                                  compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr, compute_total_return)
@@ -17,7 +17,7 @@ from modules.portfolio import display_portfolio_module
 
 
 #put the docstring in a function so it doesn't appear in the streamlit app
-def comment():  
+def comment():
     """
     Quant Dashboard (Streamlit App Entry Point)
 
@@ -44,6 +44,7 @@ def comment():
     - Some functions may return DataFrames with MultiIndex columns; these are flattened
   to ensure compatibility with Streamlit plotting functions.
     """
+
 
 # Configuration de la page
 st.set_page_config(
@@ -95,13 +96,13 @@ if page == "Single Asset":
 
     # loading data on single asset mode
     df = load_asset(ticker, interval=interval)
-    
+
     # Add technical indicators
     rsi_window = st.sidebar.slider("RSI window", 5, 30, 14)
     df = add_rsi(df, window=rsi_window)
     df = add_macd(df)
     df = add_sma(df, window=20)
-    
+
     # Apply selected strategy
     if strategy_name == "Buy & Hold":
         strat_df = buy_and_hold(df)
@@ -158,16 +159,15 @@ if 'strat_df' in locals():
             cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
             total_return = compute_total_return(equity_strat)
 
-
     # main graph : price vs strategy
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
         st.markdown("---")
         st.subheader("Main Chart - Raw Asset Price vs Cumulative Strategy Value")
         st.caption(f"Asset: {ticker} | Strategy: {strategy_name}")
-        
+
         # Calculate price predictions
         predictions = predict_future_prices_simple(df, days_ahead=30, price_col="Close")
-        
+
         fig = go.Figure()
 
         # raw price
@@ -191,7 +191,7 @@ if 'strat_df' in locals():
             yaxis='y2',
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Cumulative Value: %{y:.4f}<extra></extra>'
         ))
-        
+
         # Chart configuration with dual Y-axes
         fig.update_layout(
             title=f"Raw Price vs Strategy Performance ({strategy_name})",
@@ -220,13 +220,13 @@ if 'strat_df' in locals():
 
     st.subheader("RSI")
     st.line_chart(df["RSI"])
-    
+
     # Display strategy positions
     if 'strat_df' in locals():
         st.subheader("Strategy Positions")
         st.line_chart(strat_df["Position"])
 
-        # equity curves 
+        # equity curves
         if all(col in strat_df.columns for col in ["Equity_Asset", "Equity_Strategy"]):
             st.subheader("Equity Curves - Strategy vs Buy & Hold Comparison")
             st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
@@ -263,13 +263,10 @@ if 'strat_df' in locals():
     col1.metric("Last Price", f"${last_price:.2f}")
     col2.metric("Daily Return", f"{daily_ret:.2%}")
     col3.metric("20d Annualized Vol", f"{vol_20d:.2%}")
-    
+
     # Display detailed single asset module
     display_single_asset_module(ticker)
 else:
     display_portfolio_module()
-
-    
-    display_single_asset_module(ticker)
 
 #PORTFOLIO MODE
