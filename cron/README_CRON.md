@@ -17,7 +17,7 @@ Le script va :
 
 ## Installation Manuelle
 
-Si vous préférez configurer manuellement :
+Configuration manuelle du cron job :
 
 1. **Éditer le crontab** :
 ```bash

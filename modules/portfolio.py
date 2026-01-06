@@ -1,4 +1,4 @@
-# Module Portfolio (vide pour l'instant)
+# Portfolio module (placeholder)
 import streamlit as st
 
 def display_portfolio_module():

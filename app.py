@@ -7,19 +7,11 @@ from streamlit_autorefresh import st_autorefresh
 from modules.data import load_asset
 from modules.indicators import add_rsi, add_macd, add_sma
 from modules.strategies import buy_and_hold, rsi_strategy, momentum_strategy
-from modules.backtesting import (
-    apply_strategy_returns,
-    build_equity_curves,
-    compute_returns,
-    apply_strategy_position,
-    compute_cumulative_returns,
-    backtest_complete,
-    compute_volatility,
-    compute_sharpe_ratio,
-    compute_max_drawdown,
-    compute_cagr,
-    compute_total_return,
-)
+from modules.backtesting import (apply_strategy_returns, build_equity_curves, 
+                                 compute_returns, apply_strategy_position, compute_cumulative_returns,
+                                 backtest_complete,
+                                 compute_volatility, compute_sharpe_ratio, compute_max_drawdown, compute_cagr, compute_total_return)
+from modules.prediction import predict_future_prices_simple
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
@@ -59,7 +51,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Rafraîchissement automatique toutes les 5 minutes (300000 millisecondes)
+# Auto-refresh every 5 minutes (300000 milliseconds)
 st_autorefresh(interval=5 * 60 * 1000, key="data_refresh")
 
 st.title("Quant Dashboard - Python, Git, Linux Project for Finance")
@@ -103,14 +95,14 @@ if page == "Single Asset":
 
     # loading data on single asset mode
     df = load_asset(ticker, interval=interval)
-
-    # Ajout des indicateurs techniques
+    
+    # Add technical indicators
     rsi_window = st.sidebar.slider("RSI window", 5, 30, 14)
     df = add_rsi(df, window=rsi_window)
     df = add_macd(df)
     df = add_sma(df, window=20)
-
-    # Application de la stratégie sélectionnée
+    
+    # Apply selected strategy
     if strategy_name == "Buy & Hold":
         strat_df = buy_and_hold(df)
     elif strategy_name == "RSI strategy":
@@ -172,7 +164,10 @@ if 'strat_df' in locals():
         st.markdown("---")
         st.subheader("Main Chart - Raw Asset Price vs Cumulative Strategy Value")
         st.caption(f"Asset: {ticker} | Strategy: {strategy_name}")
-
+        
+        # Calculate price predictions
+        predictions = predict_future_prices_simple(df, days_ahead=30, price_col="Close")
+        
         fig = go.Figure()
 
         # raw price
@@ -196,7 +191,8 @@ if 'strat_df' in locals():
             yaxis='y2',
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Cumulative Value: %{y:.4f}<extra></extra>'
         ))
-
+        
+        # Chart configuration with dual Y-axes
         fig.update_layout(
             title=f"Raw Price vs Strategy Performance ({strategy_name})",
             xaxis_title="Date",
@@ -224,7 +220,8 @@ if 'strat_df' in locals():
 
     st.subheader("RSI")
     st.line_chart(df["RSI"])
-
+    
+    # Display strategy positions
     if 'strat_df' in locals():
         st.subheader("Strategy Positions")
         st.line_chart(strat_df["Position"])
@@ -266,6 +263,11 @@ if 'strat_df' in locals():
     col1.metric("Last Price", f"${last_price:.2f}")
     col2.metric("Daily Return", f"{daily_ret:.2%}")
     col3.metric("20d Annualized Vol", f"{vol_20d:.2%}")
+    
+    # Display detailed single asset module
+    display_single_asset_module(ticker)
+else:
+    display_portfolio_module()
 
     # Module détaillé single asset (si tu veux le garder)
     display_single_asset_module(ticker)
