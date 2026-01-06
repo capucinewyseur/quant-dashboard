@@ -15,7 +15,6 @@ from modules.prediction import predict_future_prices_simple
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
-<<<<<<< HEAD
 
 #put the docstring in a function so it doesn't appear in the streamlit app
 def comment():  
@@ -47,9 +46,6 @@ def comment():
     """
 
 # Configuration de la page
-=======
-# Page configuration
->>>>>>> main
 st.set_page_config(
     page_title="Quant Dashboard",
     layout="wide"
@@ -67,7 +63,6 @@ st.sidebar.markdown("---")
 page = st.sidebar.radio("Module", ["Single Asset", "Portfolio"])
 st.sidebar.markdown("---")
 
-<<<<<<< HEAD
 #Single asset Mode
 if page == "Single Asset":
     # --------- Sidebar : paramètres single asset ----------
@@ -99,40 +94,6 @@ if page == "Single Asset":
     )
 
     # loading data on single asset mode
-=======
-# Asset selection in sidebar
-st.sidebar.subheader("Asset Selection")
-ticker_options = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "JPM", "V", "JNJ"]
-ticker_selected = st.sidebar.selectbox("Select Ticker", ticker_options, index=0)
-ticker_custom = st.sidebar.text_input("Or enter custom ticker", "")
-ticker = ticker_custom if ticker_custom else ticker_selected
-
-# Periodicity selection
-st.sidebar.markdown("---")
-periodicity = st.sidebar.selectbox(
-    "Periodicity",
-    ["Daily", "Weekly", "Monthly"],
-    index=0
-)
-
-# Map periodicity to interval
-periodicity_map = {
-    "Daily": "1d",
-    "Weekly": "1wk",
-    "Monthly": "1mo"
-}
-interval = periodicity_map[periodicity]
-
-# Strategy selection
-st.sidebar.markdown("---")
-strategy_name = st.sidebar.selectbox(
-    "Strategy",
-    ["Buy & Hold", "RSI strategy", "Momentum strategy"]
-)
-
-if page == "Single Asset":
-    # Load data with selected ticker and periodicity
->>>>>>> main
     df = load_asset(ticker, interval=interval)
     
     # Add technical indicators
@@ -179,7 +140,6 @@ if 'strat_df' in locals():
         strat_ret = strat_df["StrategyReturn"].dropna()
         equity_strat = strat_df["Equity_Strategy"].dropna()
 
-<<<<<<< HEAD
         if len(strat_ret) > 0 and len(equity_strat) > 0:
             periods_map = {
                 "Daily": 252,
@@ -200,20 +160,6 @@ if 'strat_df' in locals():
 
 
     # main graph : price vs strategy
-=======
-                vol_annual = compute_volatility(strat_ret, periods_per_year=periods_per_year)
-                sharpe = compute_sharpe_ratio(
-                    strat_ret,
-                    periods_per_year=periods_per_year,
-                    risk_free_rate=0.0
-                )
-                max_dd = compute_max_drawdown(equity_strat)
-                cagr = compute_cagr(equity_strat, periods_per_year=periods_per_year)
-                total_return = compute_total_return(equity_strat)
-    
-    # Main chart: raw asset price and cumulative strategy value
-    # Displays two curves: raw price (left Y-axis) and strategy equity (right Y-axis)
->>>>>>> main
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
         st.markdown("---")
         st.subheader("Main Chart - Raw Asset Price vs Cumulative Strategy Value")
@@ -223,13 +169,8 @@ if 'strat_df' in locals():
         predictions = predict_future_prices_simple(df, days_ahead=30, price_col="Close")
         
         fig = go.Figure()
-<<<<<<< HEAD
 
         # raw price
-=======
-        
-        # Raw asset price (left Y-axis)
->>>>>>> main
         fig.add_trace(go.Scatter(
             x=df.index,
             y=df["Close"],
@@ -239,51 +180,8 @@ if 'strat_df' in locals():
             yaxis='y',
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'
         ))
-<<<<<<< HEAD
 
         # cummulative value of strat
-=======
-        
-        # Add predictions if available
-        if not predictions.empty:
-            # Confidence interval upper bound
-            fig.add_trace(go.Scatter(
-                x=predictions.index,
-                y=predictions['Upper_Bound'],
-                mode='lines',
-                name='Upper Confidence',
-                line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
-                yaxis='y',
-                showlegend=False,
-                hoverinfo='skip'
-            ))
-            
-            # Confidence interval lower bound with fill
-            fig.add_trace(go.Scatter(
-                x=predictions.index,
-                y=predictions['Lower_Bound'],
-                mode='lines',
-                name='Confidence Interval',
-                fill='tonexty',
-                fillcolor='rgba(255, 127, 14, 0.1)',
-                line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
-                yaxis='y',
-                hovertemplate='<b>Confidence Interval</b><br>Date: %{x}<br>Lower: $%{y:.2f}<extra></extra>'
-            ))
-            
-            # Prediction line
-            fig.add_trace(go.Scatter(
-                x=predictions.index,
-                y=predictions['Predicted_Price'],
-                mode='lines',
-                name='Predicted Price (30 days) - Simple Linear Regression',
-                line=dict(color='#ff7f0e', width=2, dash='dash'),
-                yaxis='y',
-                hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Predicted: $%{y:.2f}<extra></extra>'
-            ))
-        
-        # Cumulative strategy value (right Y-axis)
->>>>>>> main
         fig.add_trace(go.Scatter(
             x=strat_df.index,
             y=strat_df["Equity_Strategy"],
@@ -315,90 +213,8 @@ if 'strat_df' in locals():
         )
 
         st.plotly_chart(fig, use_container_width=True)
-<<<<<<< HEAD
 
     # secondary graphs
-=======
-        
-        # Bonus: Separate prediction chart
-        if not predictions.empty:
-            st.markdown("---")
-            st.subheader("Price Prediction - 30 Days Forecast")
-            st.caption(f"Simple Linear Regression Model | Asset: {ticker}")
-            
-            fig_pred = go.Figure()
-            
-            # Historical prices (last 60 days for context)
-            recent_df = df.tail(60)
-            fig_pred.add_trace(go.Scatter(
-                x=recent_df.index,
-                y=recent_df["Close"],
-                mode='lines',
-                name=f'Historical Price - {ticker}',
-                line=dict(color='#1f77b4', width=2),
-                hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'
-            ))
-            
-            # Prediction line
-            fig_pred.add_trace(go.Scatter(
-                x=predictions.index,
-                y=predictions['Predicted_Price'],
-                mode='lines',
-                name='Predicted Price - Simple Linear Regression',
-                line=dict(color='#ff7f0e', width=3, dash='dash'),
-                hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Predicted: $%{y:.2f}<extra></extra>'
-            ))
-            
-            # Confidence interval upper
-            fig_pred.add_trace(go.Scatter(
-                x=predictions.index,
-                y=predictions['Upper_Bound'],
-                mode='lines',
-                name='Upper Bound',
-                line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
-                showlegend=False,
-                hoverinfo='skip'
-            ))
-            
-            # Confidence interval lower (filled)
-            fig_pred.add_trace(go.Scatter(
-                x=predictions.index,
-                y=predictions['Lower_Bound'],
-                mode='lines',
-                name='Confidence Interval (95%)',
-                fill='tonexty',
-                fillcolor='rgba(255, 127, 14, 0.15)',
-                line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
-                hovertemplate='<b>Confidence Interval</b><br>Date: %{x}<br>Lower: $%{y:.2f}<extra></extra>'
-            ))
-            
-            # Historical data ends at last date, predictions start from next day
-            
-            fig_pred.update_layout(
-                title=f"{ticker} Price Prediction - Linear Regression Model",
-                xaxis_title="Date",
-                yaxis_title="Price (USD)",
-                hovermode='x unified',
-                height=400,
-                showlegend=True
-            )
-            
-            st.plotly_chart(fig_pred, use_container_width=True)
-            
-            # Display prediction summary
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Predicted Price (30 days)", f"${predictions['Predicted_Price'].iloc[-1]:.2f}")
-            with col2:
-                current_price = float(df["Close"].iloc[-1])
-                predicted_price = float(predictions['Predicted_Price'].iloc[-1])
-                change_pct = ((predicted_price - current_price) / current_price) * 100
-                st.metric("Expected Change (30d)", f"{change_pct:.2f}%")
-            with col3:
-                confidence_range = float(predictions['Upper_Bound'].iloc[-1] - predictions['Lower_Bound'].iloc[-1])
-                st.metric("Confidence Range", f"${confidence_range:.2f}")
-    
->>>>>>> main
     st.subheader(f"{ticker} Price")
     st.line_chart(df["Close"])
 
@@ -409,7 +225,6 @@ if 'strat_df' in locals():
     if 'strat_df' in locals():
         st.subheader("Strategy Positions")
         st.line_chart(strat_df["Position"])
-<<<<<<< HEAD
 
         # equity curves 
         if all(col in strat_df.columns for col in ["Equity_Asset", "Equity_Strategy"]):
@@ -419,16 +234,6 @@ if 'strat_df' in locals():
             st.info("Equity curves are not available for this configuration.")
 
             if all(v is not None for v in [vol_annual, sharpe, max_dd, cagr, total_return]):
-=======
-        
-        # Display equity curves
-        if "Equity_Asset" in strat_df.columns and "Equity_Strategy" in strat_df.columns:
-            st.subheader("Equity Curves - Strategy vs Buy & Hold Comparison")
-            st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
-            
-            # Display performance metrics
-            if vol_annual is not None and sharpe is not None and max_dd is not None and cagr is not None and total_return is not None:
->>>>>>> main
                 st.markdown("---")
                 st.subheader("Strategy Performance Metrics")
                 col1, col2, col3, col4, col5 = st.columns(5)
@@ -446,13 +251,8 @@ if 'strat_df' in locals():
                 with col5:
                     total_return_display = f"{total_return:.2%}" if not np.isnan(total_return) else "N/A"
                     st.metric("Total Return", total_return_display)
-<<<<<<< HEAD
 
     # KPIs daily
-=======
-    
-    # Daily KPIs: current price, daily return, 20-day volatility
->>>>>>> main
     st.markdown("---")
     st.subheader("Daily KPIs")
     last_price = float(df["Close"].iloc[-1])
@@ -469,17 +269,7 @@ if 'strat_df' in locals():
 else:
     display_portfolio_module()
 
-    # Module détaillé single asset (si tu veux le garder)
+    
     display_single_asset_module(ticker)
-<<<<<<< HEAD
 
 #PORTFOLIO MODE
-else:
-    
-    # the sidebar is manages on display_portfolio_module().
-    display_portfolio_module()
-=======
-# =============================
-# MODE PORTFOLIO
-# =============================
->>>>>>> main
