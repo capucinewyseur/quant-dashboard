@@ -23,6 +23,36 @@ from modules.backtesting import (
 from modules.single_asset import display_single_asset_module
 from modules.portfolio import display_portfolio_module
 
+
+#put the docstring in a function so it doesn't appear in the streamlit app
+def comment():  
+    """
+    Quant Dashboard (Streamlit App Entry Point)
+
+    This file is the main Streamlit application that provides two modules:
+    - Single Asset: technical indicators, strategy signals, backtesting, and performance metrics
+    - Portfolio: multi-asset portfolio module (handled in modules.portfolio)
+
+    The app is structured as follows:
+    1) Global Streamlit configuration (page layout + auto-refresh)
+    2) Sidebar navigation between modules (Single Asset vs Portfolio)
+    3) Single Asset workflow:
+   - Select ticker and data periodicity
+   - Load data and compute indicators (RSI, MACD, SMA)
+   - Generate strategy positions (Buy & Hold / RSI / Momentum)
+   - Run a backtest (equity curves + strategy returns)
+   - Display charts and risk/performance metrics
+    4) Portfolio workflow:
+   - Delegated to display_portfolio_module()
+
+    Notes
+    -----
+    - backtest_complete() is expected to add/compute columns such as:
+  'StrategyReturn', 'Equity_Strategy', and sometimes 'Equity_Asset'.
+    - Some functions may return DataFrames with MultiIndex columns; these are flattened
+  to ensure compatibility with Streamlit plotting functions.
+    """
+
 # Configuration de la page
 st.set_page_config(
     page_title="Quant Dashboard",
