@@ -35,17 +35,13 @@ st_autorefresh(interval=5 * 60 * 1000, key="data_refresh")
 st.title("Quant Dashboard - Python, Git, Linux Project for Finance")
 st.caption("Quantitative analysis dashboard for finance")
 
-# -----------------------------
-# Navigation principale
-# -----------------------------
+# Main navigation
 st.sidebar.header("Navigation")
 st.sidebar.markdown("---")
 page = st.sidebar.radio("Module", ["Single Asset", "Portfolio"])
 st.sidebar.markdown("---")
 
-# =============================
-# MODE SINGLE ASSET
-# =============================
+#Single asset Mode
 if page == "Single Asset":
     # --------- Sidebar : paramètres single asset ----------
     st.sidebar.subheader("Asset Selection")
@@ -75,7 +71,7 @@ if page == "Single Asset":
         ["Buy & Hold", "RSI strategy", "Momentum strategy"]
     )
 
-    # --------- Chargement des données single asset ----------
+    # loading data on single asset mode
     df = load_asset(ticker, interval=interval)
 
     # Ajout des indicateurs techniques
@@ -105,7 +101,7 @@ if 'strat_df' in locals():
         initial_capital=1.0
     )
 
-    # --- FIX: flatten MultiIndex columns if needed (Streamlit expects flat columns)
+    # flatten MultiIndex columns if needed because Streamlit expects flat columns
     if isinstance(strat_df.columns, pd.MultiIndex):
         strat_df.columns = [
             c[0] if isinstance(c, tuple) else c
@@ -141,7 +137,7 @@ if 'strat_df' in locals():
             total_return = compute_total_return(equity_strat)
 
 
-    # --------- Graphique principal : prix vs stratégie ----------
+    # main graph : price vs strategy
     if 'strat_df' in locals() and "Equity_Strategy" in strat_df.columns:
         st.markdown("---")
         st.subheader("Main Chart - Raw Asset Price vs Cumulative Strategy Value")
@@ -149,7 +145,7 @@ if 'strat_df' in locals():
 
         fig = go.Figure()
 
-        # Prix brut
+        # raw price
         fig.add_trace(go.Scatter(
             x=df.index,
             y=df["Close"],
@@ -160,7 +156,7 @@ if 'strat_df' in locals():
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'
         ))
 
-        # Valeur cumulée de la stratégie
+        # cummulative value of strat
         fig.add_trace(go.Scatter(
             x=strat_df.index,
             y=strat_df["Equity_Strategy"],
@@ -192,7 +188,7 @@ if 'strat_df' in locals():
 
         st.plotly_chart(fig, use_container_width=True)
 
-    # --------- Graphiques secondaires ----------
+    # secondary graphs
     st.subheader(f"{ticker} Price")
     st.line_chart(df["Close"])
 
@@ -203,7 +199,7 @@ if 'strat_df' in locals():
         st.subheader("Strategy Positions")
         st.line_chart(strat_df["Position"])
 
-        # Affichage des equity curves
+        # equity curves 
         if all(col in strat_df.columns for col in ["Equity_Asset", "Equity_Strategy"]):
             st.subheader("Equity Curves - Strategy vs Buy & Hold Comparison")
             st.line_chart(strat_df[["Equity_Asset", "Equity_Strategy"]])
@@ -229,7 +225,7 @@ if 'strat_df' in locals():
                     total_return_display = f"{total_return:.2%}" if not np.isnan(total_return) else "N/A"
                     st.metric("Total Return", total_return_display)
 
-    # KPIs journaliers
+    # KPIs daily
     st.markdown("---")
     st.subheader("Daily KPIs")
     last_price = float(df["Close"].iloc[-1])
@@ -244,10 +240,8 @@ if 'strat_df' in locals():
     # Module détaillé single asset (si tu veux le garder)
     display_single_asset_module(ticker)
 
-# =============================
-# MODE PORTFOLIO
-# =============================
+#PORTFOLIO MODE
 else:
-    # Aucun contrôle single-asset n’est créé ici.
-    # Tout le sidebar pour le portefeuille est géré dans display_portfolio_module().
+    
+    # the sidebar is manages on display_portfolio_module().
     display_portfolio_module()
