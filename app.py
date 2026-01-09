@@ -166,14 +166,16 @@ if 'strat_df' in locals():
         st.caption(f"Asset: {ticker} | Strategy: {strategy_name}")
 
         # Calculate price predictions
-        predictions = predict_future_prices_simple(df, days_ahead=30, price_col="Close")
+        predictions = predict_future_prices_simple(strat_df, days_ahead=90, price_col="Close")
+
 
         fig = go.Figure()
 
+        
         # raw price
         fig.add_trace(go.Scatter(
-            x=df.index,
-            y=df["Close"],
+            x=strat_df.index,
+            y=strat_df["Close"],
             mode='lines',
             name=f'Raw Price - {ticker}',
             line=dict(color='#1f77b4', width=3),
@@ -191,6 +193,49 @@ if 'strat_df' in locals():
             yaxis='y2',
             hovertemplate='<b>%{fullData.name}</b><br>Date: %{x}<br>Cumulative Value: %{y:.4f}<extra></extra>'
         ))
+
+        # --- Add prediction traces (if available) ---
+        if predictions is not None and not predictions.empty:
+            # predicted line
+            fig.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions["Predicted_Price"],
+                mode="lines",
+                name="Linear Reg Prediction",
+                line=dict(width=2, dash="dash"),
+                yaxis="y"
+            ))
+
+            # confidence band (upper then lower, with fill)
+            fig.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions["Upper_Bound"],
+                mode="lines",
+                name="Upper Bound",
+                line=dict(width=0),
+                showlegend=False,
+                yaxis="y"
+            ))
+
+            fig.add_trace(go.Scatter(
+                x=predictions.index,
+                y=predictions["Lower_Bound"],
+                mode="lines",
+                name="Confidence Interval",
+                line=dict(width=0),
+                fill="tonexty",
+                yaxis="y"            
+            ))
+        else:
+            st.info("Not enough data to display linear regression prediction.")
+
+
+
+
+
+
+
+
 
         # Chart configuration with dual Y-axes
         fig.update_layout(
