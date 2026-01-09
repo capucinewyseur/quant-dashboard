@@ -1,120 +1,96 @@
-Quant Dashboard
-Présentation du projet
+# Quant Dashboard
 
-Ce projet consiste en le développement d’un dashboard de finance quantitative en Python, basé sur Streamlit, permettant l’analyse de données financières, le backtesting de stratégies de trading et la génération automatisée de rapports.
+## Project Presentation
 
-L’objectif est de mettre en œuvre une architecture modulaire reproduisant un workflow quantitatif complet : extraction de données, traitement, indicateurs, stratégies, évaluation des performances et restitution visuelle.
+This project consists in the development of a **quantitative finance dashboard** in Python, built with **Streamlit**, enabling financial data analysis, trading strategy backtesting, and automated report generation.
 
-Environnement et outils
+The objective is to implement a **modular architecture** reproducing a complete quantitative workflow: data extraction, processing, indicators, strategies, performance evaluation, and visual reporting.
 
-Langage : Python
+---
 
-Interface : Streamlit
+## Environment and Tools
 
-Gestion de version : Git / GitHub
+- **Language**: Python  
+- **Interface**: Streamlit  
+- **Version Control**: Git / GitHub  
+- **Deployment**: AWS (Linux virtual machine)  
+- **Scheduling**: Cron  
+- **Data Sources**: Financial APIs (Alpha Vantage / Yahoo Finance)
 
-Déploiement : AWS (machine virtuelle Linux)
+A Python virtual environment was used to isolate project dependencies.
 
-Planification : Cron
+## Project Architecture
 
-Sources de données : API financière (Alpha Vantage / Yahoo Finance)
-
-Un environnement virtuel Python a été utilisé afin d’isoler les dépendances du projet.
-
-Architecture du projet
 quant-dashboard/
-├── app.py                  # Application Streamlit principale
+├── app.py # Main Streamlit application
 ├── modules/
-│   ├── data.py             # Chargement et nettoyage des données
-│   ├── indicators.py       # Indicateurs techniques
-│   ├── strategies.py       # Stratégies de trading
-│   ├── backtesting.py      # Backtesting et métriques
-│   ├── prediction.py       # Modèle de prédiction
-│   ├── single_asset.py     # Module Quant A
-│   └── portfolio.py        # Module Quant B
-├── cron/                   # Génération automatique de rapports
-├── reports/                # Rapports journaliers
+│ ├── data.py # Data loading and preprocessing
+│ ├── indicators.py # Technical indicators
+│ ├── strategies.py # Trading strategies
+│ ├── backtesting.py # Backtesting and performance metrics
+│ ├── prediction.py # Prediction model
+│ ├── single_asset.py # Quant A module
+│ └── portfolio.py # Quant B module
+├── cron/ # Automated report generation
+├── reports/ # Daily reports
 └── requirements.txt
 
-Quant A — Analyse mono-actif
+## Quant A — Single Asset Analysis
 
-Le module Quant A est dédié à l’analyse d’un actif financier unique (Apple – AAPL).
+The **Quant A** module is dedicated to the analysis of a single financial asset (Apple – AAPL).
 
-Fonctionnalités principales :
+### Main features
+- Automatic market data retrieval (updated every 5 minutes)
+- Price and return visualization
+- Quantitative strategy implementation:
+  - Buy & Hold  
+  - Momentum  
+  - RSI  
+- Performance metrics computation:
+  - Annualized return  
+  - Volatility  
+  - Sharpe ratio  
+  - Maximum drawdown  
+- Technical indicators display (RSI, moving averages)
+- Simple linear regression price prediction (illustrative purpose only)
 
-Récupération automatique des données de marché (mise à jour toutes les 5 minutes)
+---
 
-Visualisation du prix et des rendements
+## Quant B — Multi-Asset Portfolio Analysis
 
-Implémentation de stratégies quantitatives :
+The **Quant B** module extends the analysis to a portfolio composed of multiple assets.
 
-Buy & Hold
+### Main features
+- Real-time monitoring of multiple asset prices
+- Portfolio construction:
+  - Equal-weighted portfolio  
+  - Custom-weight portfolios  
+- Portfolio value simulation over time
+- Full portfolio backtesting
+- Automatic computation of performance metrics:
+  - Annualized return  
+  - Volatility  
+  - Sharpe ratio  
+  - Maximum drawdown  
+- Diversification analysis using a correlation matrix
+- Automated daily report generation (scheduled on the AWS virtual machine)
 
-Momentum
+---
 
-RSI
+## Deployment and Automation
 
-Calcul des métriques de performance :
+The application is deployed on an **AWS cloud infrastructure**, allowing remote access to the Streamlit dashboard.  
+Cron jobs are configured to automatically generate daily text-based reports without manual intervention.
 
-Rendement annualisé
+---
 
-Volatilité
+## Collaborative Development
 
-Sharpe Ratio
+The project was developed collaboratively using Git:
 
-Max Drawdown
+- **main** branch: stable version  
+- Development branches:
+  - `emile` (Quant A)
+  - `ptAcapucine` (Quant B)
 
-Affichage des indicateurs techniques (RSI, moyennes mobiles)
-
-Module de prédiction par régression linéaire simple, intégré au dashboard à titre illustratif
-
-Quant B — Analyse multi-actifs
-
-Le module Quant B étend l’analyse à un portefeuille composé de plusieurs actifs.
-
-Fonctionnalités principales :
-
-Suivi en temps réel des prix de plusieurs actifs
-
-Construction de portefeuilles :
-
-Équipondéré
-
-Pondérations personnalisées
-
-Simulation de la valeur du portefeuille dans le temps
-
-Backtesting du portefeuille global
-
-Calcul automatique des métriques de performance :
-
-Rendement annualisé
-
-Volatilité
-
-Sharpe Ratio
-
-Max Drawdown
-
-Analyse de la diversification via une matrice de corrélation
-
-Génération automatique de rapports journaliers (scripts planifiés sur la VM AWS)
-
-Déploiement et automatisation
-
-L’application a été déployée sur une infrastructure cloud AWS, permettant un accès distant au dashboard Streamlit.
-Un système de cron jobs a été configuré afin de générer automatiquement des rapports quotidiens en format texte, sans intervention manuelle.
-
-Travail collaboratif
-
-Le développement a été réalisé de manière collaborative à l’aide de Git :
-
-Branche main : version stable
-
-Branches de développement :
-
-emile (Quant A)
-
-ptAcapucine (Quant B)
-
-Les fusions ont été effectuées après validation des fonctionnalités.
+All merges were performed after feature validation.
