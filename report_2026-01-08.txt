@@ -1,0 +1,30 @@
+Daily Report — 2026-01-08
+
+Configuration
+- Assets: AAPL, BTC-USD, EURUSD=X, GC=F, ^DJI
+- Interval: 1d
+- Weights mode: Equal weight
+- Rebalancing: none
+- Window: last 365 days (approx)
+
+Latest data points
+- Last timestamp: 2026-01-08 00:00:00
+- Last prices:
+  - AAPL: 256.9900
+  - BTC-USD: 90948.2969
+  - EURUSD=X: 1.1648
+  - GC=F: 4462.6001
+  - ^DJI: 49263.2188
+
+Portfolio metrics
+- Annual return: 14.00%
+- Annual vol: 12.30%
+- Sharpe: 1.1375
+- Max drawdown: -12.70%
+- Diversification ratio: 1.6057
+
+Correlation matrix (rounded)
+Ticker    AAPL  BTC-USD  EURUSD=X  GC=F  ^DJI
+Ticker
+AAPL      1.00     0.20      0.05  0.00  0.69
+:
