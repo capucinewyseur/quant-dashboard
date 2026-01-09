@@ -1,223 +1,62 @@
-# Quant Dashboard
+Quant Dashboard
+Project Overview
 
-A quantitative analysis dashboard for finance built with Python and Streamlit. This project provides real-time financial data analysis, trading strategy backtesting, and automated daily reports.
+This project consists of a quantitative finance dashboard developed in Python using Streamlit. It implements a complete quantitative workflow, from market data extraction to strategy backtesting, performance analysis, and automated reporting.
 
-## Project Purpose
+Technical Stack
 
-This dashboard is designed for quantitative finance analysis, allowing users to:
-- Analyze single assets with technical indicators (RSI, MACD, SMA)
-- Test trading strategies (Buy & Hold, RSI Strategy, Momentum Strategy)
-- View performance metrics (Sharpe Ratio, Max Drawdown, Volatility, CAGR, Total Return)
-- Generate automated daily reports via cron jobs
+Language: Python
 
-## Installation
+Framework: Streamlit
 
-### Prerequisites
-- Python 3.8 or higher
-- pip (Python package manager)
+Version Control: Git / GitHub
 
-### Setup Steps
+Deployment: AWS (Linux VM)
 
-1. **Clone the repository**:
-```bash
-git clone https://github.com/capucinewyseur/quant-dashboard.git
-cd quant-dashboard
-```
+Scheduling: Cron
 
-2. **Create a virtual environment**:
-```bash
-python3 -m venv venv
-```
+Data Sources: Financial market APIs (Alpha Vantage / Yahoo Finance)
 
-3. **Activate the virtual environment**:
-```bash
-# On Linux/Mac:
-source venv/bin/activate
+Project Structure
 
-# On Windows:
-venv\Scripts\activate
-```
+The application follows a modular architecture:
 
-4. **Install dependencies**:
-```bash
-pip install -r requirements.txt
-```
+Data loading and preprocessing
 
-## Running the Application
+Technical indicators computation
 
-Start the Streamlit dashboard:
-```bash
-streamlit run app.py
-```
+Trading strategies implementation
 
-The dashboard will be available at `http://localhost:8501` in your web browser.
+Backtesting and performance metrics
 
-### Features
+Visualization and reporting modules
 
-- **Asset Selection**: Choose from popular tickers (AAPL, MSFT, GOOGL, etc.) or enter a custom ticker
-- **Periodicity**: Select Daily, Weekly, or Monthly data intervals
-- **Strategy Selection**: Choose between Buy & Hold, RSI Strategy, or Momentum Strategy
-- **Interactive Charts**: View price data, RSI, strategy positions, and equity curves
-- **Performance Metrics**: View Sharpe Ratio, Max Drawdown, Annualized Volatility, CAGR, and Total Return
-- **Price Prediction (Bonus)**: Simple Linear Regression model to forecast future prices with confidence intervals
-- **Auto-refresh**: Data updates automatically every 5 minutes
+Quant A — Single Asset Analysis
 
-## Project Structure
+Quant A focuses on the analysis of a single financial asset (AAPL):
 
-```
-quant-dashboard/
-├── app.py                      # Main Streamlit application
-├── modules/
-│   ├── data.py                # Data loading from Yahoo Finance
-│   ├── indicators.py          # Technical indicators (RSI, MACD, SMA)
-│   ├── strategies.py          # Trading strategies
-│   ├── backtesting.py         # Backtesting engine and metrics
-│   ├── prediction.py          # Price prediction model (Linear Regression)
-│   ├── single_asset.py        # Single asset analysis module
-│   └── portfolio.py           # Portfolio analysis module
-├── cron/
-│   ├── generate_report.py     # Daily report generator
-│   ├── install_cron.sh        # Automatic cron job installer
-│   ├── crontab.example        # Cron configuration example
-│   └── README_CRON.md        # Cron documentation
-├── reports/                   # Generated daily reports (auto-created)
-├── requirements.txt           # Python dependencies
-└── README.md                 # This file
-```
+Real-time market data updates (every 5 minutes)
 
-## Usage Examples
+Implementation of Buy & Hold, Momentum, and RSI strategies
 
-### Basic Usage
+Equity curve construction and strategy comparison
 
-1. Launch the application: `streamlit run app.py`
-2. Select a ticker from the sidebar (e.g., "AAPL")
-3. Choose a periodicity (Daily, Weekly, or Monthly)
-4. Select a trading strategy
-5. Adjust strategy parameters using the sliders
-6. View the results in the dashboard
+Performance metrics: annualized return, volatility, Sharpe ratio, and max drawdown
 
-### Price Prediction Feature (Bonus)
+Simple linear regression price prediction (illustrative purpose only)
 
-The dashboard includes a simple predictive model using **Linear Regression** to forecast future prices:
+Quant B — Multi-Asset Portfolio Analysis
 
-- **Model**: Simple Linear Regression (y = a*x + b)
-- **Forecast Period**: 30 days ahead
-- **Confidence Interval**: ±2 standard deviations (95% confidence)
-- **Display**: 
-  - Integrated in the main chart (orange dashed line with shaded confidence band)
-  - Separate dedicated prediction chart below the main chart
-  - Prediction summary metrics (predicted price, expected change, confidence range)
+Quant B extends the framework to a multi-asset portfolio:
 
-The prediction model uses historical price data to fit a linear trend and extrapolates it into the future. 
+Portfolio construction (equal-weighted and custom allocations)
 
-**How it works:**
-- Fits a straight line (y = a*x + b) through all historical prices
-- Calculates the slope (trend direction) and intercept
-- Extrapolates this line 30 days ahead
-- Calculates confidence interval (±2 standard deviations)
+Portfolio backtesting and performance evaluation
 
-**Why it's not very accurate:**
-- Stock prices don't follow linear trends (they're volatile and non-linear)
-- Ignores market cycles, volatility patterns, and external factors
-- Very simple model for demonstration only
+Risk analysis using correlation matrices
 
-**Note**: This is a simple model for demonstration purposes and should not be used for actual trading decisions. Real trading would require more sophisticated models (ARIMA, LSTM, Random Forest, etc.).
+Automated daily performance reports generated via cron jobs
 
-### Running Daily Reports Manually
+Deployment and Automation
 
-Generate a report for a specific ticker:
-```bash
-python3 cron/generate_report.py AAPL
-```
-
-Reports are saved in `reports/YYYY-MM-DD.txt` format.
-
-## Cron Job Configuration
-
-### Automatic Installation (Recommended)
-
-Install the cron job automatically:
-```bash
-./cron/install_cron.sh
-```
-
-This will configure the system to generate a daily report at 8:00 PM (20:00) every day.
-
-### Manual Installation
-
-1. Edit your crontab:
-```bash
-crontab -e
-```
-
-2. Add this line (adjust paths to your project):
-```bash
-0 20 * * * cd /path/to/quant-dashboard && /path/to/venv/bin/python3 cron/generate_report.py >> cron/cron.log 2>&1
-```
-
-3. Verify the installation:
-```bash
-crontab -l
-```
-
-4. View cron logs:
-```bash
-tail -f cron/cron.log
-```
-
-### Report Contents
-
-Each daily report includes:
-- Latest open/close prices and daily change
-- Annualized Volatility
-- Sharpe Ratio
-- Max Drawdown
-- CAGR (Compound Annual Growth Rate)
-- Total Return
-- Data summary (total data points and date range)
-
-## Dependencies
-
-- streamlit
-- pandas
-- numpy
-- matplotlib
-- yfinance
-- requests
-- plotly
-- streamlit-autorefresh
-
-## Known Issues and Limitations
-
-- **Data Source**: Relies on Yahoo Finance API (yfinance). If the API is down, data loading will fail.
-- **Rate Limiting**: Yahoo Finance may rate-limit requests if too many are made in a short time.
-- **Historical Data**: Limited by Yahoo Finance's available historical data (typically 5-10 years for daily data).
-- **Ticker Validation**: Invalid tickers will result in empty data. Always verify ticker symbols.
-- **Network Dependency**: Requires an active internet connection to fetch data.
-- **Platform**: Cron jobs are configured for Linux/Mac. Windows users need to use Task Scheduler instead.
-
-## Troubleshooting
-
-### Application won't start
-- Ensure the virtual environment is activated
-- Check that all dependencies are installed: `pip install -r requirements.txt`
-- Verify Python version: `python3 --version` (should be 3.8+)
-
-### No data displayed
-- Check your internet connection
-- Verify the ticker symbol is correct
-- Try a different ticker (e.g., AAPL, MSFT)
-
-### Cron job not running
-- Verify cron is installed: `which cron` or `systemctl status cron`
-- Check cron logs: `tail -f cron/cron.log`
-- Verify the cron job is installed: `crontab -l`
-- Test the script manually: `python3 cron/generate_report.py AAPL`
-
-## License
-
-This project is part of an academic assignment for quantitative finance analysis.
-
-## Contact
-
-For issues or questions, please open an issue on the GitHub repository.
+The dashboard is deployed on an AWS cloud infrastructure and remains continuously accessible. Daily reports are automatically generated on the virtual machine without manual intervention.
