@@ -19,22 +19,6 @@ The objective is to implement a **modular architecture** reproducing a complete 
 
 A Python virtual environment was used to isolate project dependencies.
 
-## Project Architecture
-
-quant-dashboard/
-├── app.py # Main Streamlit application
-├── modules/
-│ ├── data.py # Data loading and preprocessing
-│ ├── indicators.py # Technical indicators
-│ ├── strategies.py # Trading strategies
-│ ├── backtesting.py # Backtesting and performance metrics
-│ ├── prediction.py # Prediction model
-│ ├── single_asset.py # Quant A module
-│ └── portfolio.py # Quant B module
-├── cron/ # Automated report generation
-├── reports/ # Daily reports
-└── requirements.txt
-
 ## Quant A — Single Asset Analysis
 
 The **Quant A** module is dedicated to the analysis of a single financial asset (Apple – AAPL).
